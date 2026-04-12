@@ -1,4 +1,12 @@
 <template>
+  <Teleport to="body">
+    <div
+      v-show="menuOpen"
+      class="nav-backdrop"
+      aria-hidden="true"
+      @click="closeMenu"
+    />
+  </Teleport>
   <nav class="navigation" :class="{ scrolled: isScrolled }">
     <div class="nav-container">
       <a
@@ -12,13 +20,25 @@
           <span class="logo-letter">C</span>
         </span>
       </a>
-      <ul class="nav-menu" :class="{ active: menuOpen }">
+      <ul
+        id="nav-menu-panel"
+        class="nav-menu"
+        :class="{ active: menuOpen }"
+        @click.stop
+      >
         <li><a href="#inicio" @click="scrollTo('inicio')">Inicio</a></li>
         <li><a href="#sobre-mi" @click="scrollTo('sobre-mi')">Sobre Mí</a></li>
         <li><a href="#proyectos" @click="scrollTo('proyectos')">Proyectos</a></li>
         <li><a href="#contacto" @click="scrollTo('contacto')">Contacto</a></li>
       </ul>
-      <button class="menu-toggle" @click="menuOpen = !menuOpen">
+      <button
+        type="button"
+        class="menu-toggle"
+        :aria-expanded="menuOpen"
+        aria-controls="nav-menu-panel"
+        aria-label="Abrir o cerrar menú"
+        @click.stop="menuOpen = !menuOpen"
+      >
         <span></span>
         <span></span>
         <span></span>
@@ -28,7 +48,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 export default {
   name: 'Navigation',
@@ -40,6 +60,10 @@ export default {
       isScrolled.value = window.scrollY > 50
     }
 
+    const closeMenu = () => {
+      menuOpen.value = false
+    }
+
     const scrollTo = (id) => {
       const element = document.getElementById(id)
       if (element) {
@@ -48,17 +72,34 @@ export default {
       }
     }
 
+    const onEscape = (e) => {
+      if (e.key === 'Escape') closeMenu()
+    }
+
+    watch(menuOpen, (open) => {
+      if (typeof document === 'undefined') return
+      document.body.style.overflow = open ? 'hidden' : ''
+      if (open) {
+        document.addEventListener('keydown', onEscape)
+      } else {
+        document.removeEventListener('keydown', onEscape)
+      }
+    })
+
     onMounted(() => {
       window.addEventListener('scroll', handleScroll)
     })
 
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('keydown', onEscape)
+      document.body.style.overflow = ''
     })
 
     return {
       isScrolled,
       menuOpen,
+      closeMenu,
       scrollTo
     }
   }
@@ -206,20 +247,48 @@ export default {
 
   .nav-menu {
     position: fixed;
-    top: 80px;
-    left: 0;
-    right: 0;
+    top: 5.25rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: calc(100vw - 2rem);
+    margin-left: auto;
+    margin-right: auto;
     background: var(--bg-page);
     flex-direction: column;
-    padding: 2rem;
-    gap: 1.5rem;
-    transform: translateX(-100%);
-    transition: var(--transition);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 1.35rem 1.5rem;
+    gap: 1.25rem;
+    transform: translateY(-0.5rem);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s ease,
+      visibility 0.22s;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.14);
+    border-radius: 12px;
+    border: 1px solid var(--footer-border);
+    z-index: 1001;
   }
 
   .nav-menu.active {
-    transform: translateX(0);
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
+}
+</style>
+
+<style>
+/* Teleport al body: capa bajo la barra (z-index de .navigation) */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.42);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 </style>

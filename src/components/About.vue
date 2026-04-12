@@ -156,7 +156,7 @@ export default {
 }
 
 .section-title {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 2.35rem;
   font-weight: 600;
   letter-spacing: -0.02em;

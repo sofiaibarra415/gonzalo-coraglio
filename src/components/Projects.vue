@@ -90,7 +90,8 @@
                   :modules="swiperModules"
                   :slides-per-view="swiperSlidesPerView"
                   :space-between="swiperSpaceBetween"
-                  :grab-cursor="false"
+                  :auto-height="swiperAutoHeight"
+                  :grab-cursor="swiperGrabCursor"
                   :mousewheel="swiperMousewheel"
                   :keyboard="{ enabled: true, onlyInViewport: false }"
                   :pagination="swiperPagination"
@@ -98,6 +99,7 @@
                   aria-roledescription="carrusel"
                   :aria-label="`Galería horizontal de ${project.title}`"
                   @swiper="(s) => onSwiperInit(s, index)"
+                  @slide-change="onCarouselSlideChange"
                 >
                   <SwiperSlide
                     v-for="item in visibleSlidesForProject(project, index)"
@@ -345,8 +347,23 @@ export default {
       isMobileProjects.value ? 22 : 40
     )
 
+    /** Móvil: alto del carrusel = alto del slide activo (imagen completa o bloque de texto) */
+    const swiperAutoHeight = computed(() => isMobileProjects.value)
+
+    const swiperGrabCursor = computed(() => isMobileProjects.value)
+
+    const onCarouselSlideChange = (swiper) => {
+      if (!isMobileProjects.value) return
+      swiper?.updateAutoHeight?.(0)
+    }
+
     const onSwiperInit = (swiper, index) => {
       swiperInstances.value[index] = swiper
+      nextTick(() => {
+        if (isMobileProjects.value) {
+          swiper?.updateAutoHeight?.(0)
+        }
+      })
     }
 
     const onEscapeKey = (e) => {
@@ -802,9 +819,13 @@ export default {
           swiperInstances.value.forEach((sw) => {
             sw?.slideTo?.(0, 0)
             sw?.update?.()
+            sw?.updateAutoHeight?.(0)
           })
           window.setTimeout(() => {
-            swiperInstances.value.forEach((sw) => sw?.update?.())
+            swiperInstances.value.forEach((sw) => {
+              sw?.update?.()
+              sw?.updateAutoHeight?.(0)
+            })
           }, 150)
         })
       })
@@ -821,6 +842,9 @@ export default {
         }
         swiperInstances.value.forEach((sw) => {
           sw?.update?.()
+          if (mobile) {
+            sw?.updateAutoHeight?.(0)
+          }
         })
       })
     })
@@ -916,8 +940,11 @@ export default {
       swiperPagination,
       swiperSlidesPerView,
       swiperSpaceBetween,
+      swiperAutoHeight,
+      swiperGrabCursor,
       swiperMousewheel,
       onSwiperInit,
+      onCarouselSlideChange,
       url: assetUrl
     }
   }
@@ -948,7 +975,7 @@ export default {
 }
 
 .section-title {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 2.35rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -1009,7 +1036,7 @@ export default {
 }
 
 .strip-title {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 0.98rem;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -1262,6 +1289,31 @@ export default {
   box-sizing: border-box;
   cursor: pointer;
   align-self: stretch;
+}
+
+/* Escritorio: carrusel con alto fijo (--carousel-h); evita restos de autoHeight al redimensionar */
+@media (min-width: 769px) {
+  .project-detail-swiper {
+    height: var(--carousel-h) !important;
+    max-height: var(--carousel-h) !important;
+  }
+
+  .project-detail-swiper :deep(.swiper),
+  .project-detail-swiper :deep(.swiper-wrapper) {
+    height: 100% !important;
+  }
+
+  .project-detail-swiper :deep(.swiper-slide) {
+    height: 100% !important;
+  }
+
+  .carousel-slide {
+    height: 100% !important;
+  }
+
+  .carousel-slide-parallax-layer {
+    height: 100% !important;
+  }
 }
 
 /* Texto / docs / pdf-slide: ancho fijo tipo columna */
@@ -1570,7 +1622,7 @@ export default {
 }
 
 .detail-heading {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 500;
   font-style: normal;
@@ -1582,7 +1634,7 @@ export default {
 }
 
 .detail-heading--v0 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -1590,7 +1642,7 @@ export default {
 }
 
 .detail-heading--v1 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -1600,7 +1652,7 @@ export default {
 }
 
 .detail-heading--v2 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 500;
   font-style: normal;
@@ -1609,7 +1661,7 @@ export default {
 }
 
 .detail-heading--v3 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 500;
   font-style: normal;
@@ -1790,13 +1842,7 @@ export default {
   }
 
   .project-body.is-expanded {
-    --carousel-h: min(420px, 58vh);
-  }
-
-  .project-detail-swiper {
-    padding: 0 0 2.1rem;
-    height: var(--carousel-h);
-    max-height: var(--carousel-h);
+    --carousel-h: auto;
   }
 
   .projects-stack-wrap,
@@ -1818,24 +1864,40 @@ export default {
     min-width: 0;
   }
 
+  /* Carrusel: 1 slide, alto = contenido, swipe desde cualquier zona */
   .project-detail-swiper {
     max-width: 100%;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+    padding: 0 0 2.1rem;
     padding-left: 0;
     padding-right: 0;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0;
+    touch-action: pan-x pinch-zoom;
+    transition: none;
   }
 
   .project-detail-swiper :deep(.swiper) {
     max-width: 100%;
     overflow: hidden;
+    height: auto !important;
+  }
+
+  .project-detail-swiper :deep(.swiper-wrapper) {
+    height: auto !important;
+    align-items: stretch;
   }
 
   .project-detail-swiper :deep(.swiper-slide) {
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box;
+    height: auto !important;
+    min-height: 0;
+    align-self: stretch !important;
   }
 
   .project-detail-swiper
@@ -1849,13 +1911,84 @@ export default {
     max-width: 100% !important;
   }
 
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--text),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--docs),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .carousel-slide {
+    height: auto !important;
+    min-height: 0;
+    touch-action: pan-x pinch-zoom;
+  }
+
+  .carousel-slide-parallax-layer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 0;
+    height: auto !important;
+    touch-action: pan-x pinch-zoom;
+  }
+
+  .carousel-slide--image {
+    overflow: visible !important;
+  }
+
+  .carousel-slide--image .slide-figure,
+  .carousel-slide--image .slide-figure--hero-toggle {
+    flex-shrink: 0;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .carousel-slide--image .slide-figure :deep(picture),
+  .carousel-slide--image .slide-figure--hero-toggle :deep(picture) {
+    height: auto !important;
+    max-height: none !important;
+  }
+
   .project-detail-swiper :deep(.carousel-slide--image img),
   .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    display: block !important;
     max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: min(88dvh, 900px) !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
     width: 100% !important;
     height: auto !important;
-    max-height: min(52vh, 360px) !important;
+    max-width: 100% !important;
+    max-height: min(88dvh, 900px) !important;
     object-fit: contain !important;
+  }
+
+  .slide-text-inner {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    flex: 0 0 auto;
+    touch-action: pan-x pinch-zoom;
+    padding: 0.35rem 0.75rem 1rem;
+    scrollbar-width: none;
+    overscroll-behavior: auto;
+  }
+
+  .slide-text-inner::-webkit-scrollbar {
+    display: none;
   }
 
   .project-detail-swiper :deep(.swiper-pagination) {

@@ -6,8 +6,7 @@
 
 :root {
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  /* Titulares con más presencia (serif con carácter) */
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-display: 'Montserrat', system-ui, sans-serif;
   /* Neutros fríos (pizarra) + acento teal + apoyo índigo */
   --color-ink: #0f172a;
   --color-deep: #1e293b;
