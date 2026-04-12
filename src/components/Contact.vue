@@ -83,16 +83,21 @@ export default {
 
 .section-label {
   display: inline-block;
-  color: var(--accent-color);
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 2px;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .section-title {
-  font-size: 3rem;
+  font-family: var(--font-sans);
+  font-size: 2.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--primary-color);
   margin-bottom: 1.5rem;
 }
@@ -153,7 +158,10 @@ export default {
 }
 
 .contact-item h4 {
-  font-size: 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--primary-color);
   margin-bottom: 0.3rem;
 }
@@ -194,7 +202,7 @@ export default {
   }
 
   .section-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
   }
 }
 </style>

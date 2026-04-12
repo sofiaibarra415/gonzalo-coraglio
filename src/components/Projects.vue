@@ -5,7 +5,7 @@
         <span class="section-label">Portfolio</span>
         <h2 class="section-title">Proyectos</h2>
         <p class="section-subtitle">
-          Miniatura centrada. Al tocar, se abre el carrusel horizontal con imágenes y textos. Podés tener varios proyectos abiertos a la vez. Tocá el título o la imagen principal para cerrar cada uno; Escape cierra todos.
+          En escritorio, tocá la miniatura para abrir el carrusel horizontal con imágenes y textos. En móvil, cada proyecto muestra ya el carrusel; tocá el título o la primera imagen para cerrarlo. Podés tener varios abiertos a la vez; Escape cierra todos.
         </p>
       </div>
     </div>
@@ -89,7 +89,7 @@
                   tabindex="0"
                   :modules="swiperModules"
                   :slides-per-view="swiperSlidesPerView"
-                  :space-between="10"
+                  :space-between="swiperSpaceBetween"
                   :grab-cursor="false"
                   :mousewheel="swiperMousewheel"
                   :keyboard="{ enabled: true, onlyInViewport: false }"
@@ -341,6 +341,10 @@ export default {
       isMobileProjects.value ? 1 : 'auto'
     )
 
+    const swiperSpaceBetween = computed(() =>
+      isMobileProjects.value ? 22 : 40
+    )
+
     const onSwiperInit = (swiper, index) => {
       swiperInstances.value[index] = swiper
     }
@@ -371,14 +375,6 @@ export default {
       },
       { deep: true }
     )
-
-    watch(isMobileProjects, () => {
-      nextTick(() => {
-        swiperInstances.value.forEach((sw) => {
-          sw?.update?.()
-        })
-      })
-    })
 
     const onHeadClick = (index) => {
       if (isExpanded(index)) toggleExpand(index)
@@ -795,6 +791,40 @@ export default {
       carouselSlides: buildCarouselSlides(proj)
     }))
 
+    /** En móvil el carrusel debe verse sin paso extra de “tocar para abrir” */
+    const expandAllMobile = () => {
+      if (!isMobileProjects.value) return
+      const n = projects.length
+      expandedIds.value = Array.from({ length: n }, (_, i) => i)
+      carouselInfoReady.value = new Set(Array.from({ length: n }, (_, i) => i))
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          swiperInstances.value.forEach((sw) => {
+            sw?.slideTo?.(0, 0)
+            sw?.update?.()
+          })
+          window.setTimeout(() => {
+            swiperInstances.value.forEach((sw) => sw?.update?.())
+          }, 150)
+        })
+      })
+    }
+
+    watch(isMobileProjects, (mobile) => {
+      nextTick(() => {
+        if (mobile) {
+          expandAllMobile()
+        } else {
+          expandedIds.value = []
+          carouselInfoReady.value = new Set()
+          heroFlippingIndex.value = null
+        }
+        swiperInstances.value.forEach((sw) => {
+          sw?.update?.()
+        })
+      })
+    })
+
     const CAROUSEL_EXPAND_MS = FLIP_MS
 
     const toggleExpand = (index) => {
@@ -863,6 +893,9 @@ export default {
     onMounted(() => {
       updateMobileProjects()
       window.addEventListener('resize', updateMobileProjects, { passive: true })
+      nextTick(() => {
+        if (isMobileProjects.value) expandAllMobile()
+      })
     })
 
     onUnmounted(() => {
@@ -882,6 +915,7 @@ export default {
       swiperModules,
       swiperPagination,
       swiperSlidesPerView,
+      swiperSpaceBetween,
       swiperMousewheel,
       onSwiperInit,
       url: assetUrl
@@ -904,16 +938,21 @@ export default {
 
 .section-label {
   display: inline-block;
-  color: var(--accent-color);
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 2px;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .section-title {
-  font-size: 3rem;
+  font-family: var(--font-sans);
+  font-size: 2.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--primary-color);
   margin-bottom: 1rem;
 }
@@ -933,7 +972,7 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 2.25rem;
+  gap: 3.25rem;
 }
 
 .project-block {
@@ -970,13 +1009,14 @@ export default {
 }
 
 .strip-title {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--primary-color);
+  font-family: var(--font-sans);
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text-dark);
   margin: 0 0 0.35rem;
+  line-height: 1.35;
 }
 
 .strip-meta {
@@ -1440,7 +1480,7 @@ export default {
   box-sizing: border-box;
   background: transparent;
   scrollbar-width: thin;
-  scrollbar-color: rgba(35, 83, 71, 0.35) transparent;
+  scrollbar-color: rgba(13, 148, 136, 0.35) transparent;
 }
 
 .slide-text-inner::-webkit-scrollbar {
@@ -1448,7 +1488,7 @@ export default {
 }
 
 .slide-text-inner::-webkit-scrollbar-thumb {
-  background: rgba(35, 83, 71, 0.3);
+  background: rgba(13, 148, 136, 0.28);
   border-radius: 3px;
 }
 
@@ -1468,7 +1508,7 @@ export default {
   padding: 0.65rem 1.1rem;
   border-radius: 6px;
   background: var(--color-forest);
-  color: var(--color-mint) !important;
+  color: var(--white) !important;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.88rem;
@@ -1477,7 +1517,7 @@ export default {
 
 .pdf-open-button:hover {
   background: var(--color-slate);
-  color: var(--color-mint) !important;
+  color: var(--white) !important;
 }
 
 .pdf-open-button .pdf-icon {
@@ -1488,89 +1528,93 @@ export default {
 }
 
 .detail-kicker {
-  margin: 0 0 0.45rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  margin: 0 0 0.4rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-sage);
+  font-size: 0.62rem;
+  color: var(--text-muted);
 }
 
 .detail-kicker--v0 {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.62rem;
-  letter-spacing: 0.26em;
-  color: var(--color-sage);
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
 }
 
 .detail-kicker--v1 {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 0.78rem;
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-style: normal;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: none;
-  color: var(--color-slate);
+  color: var(--text-light);
 }
 
 .detail-kicker--v2 {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.66rem;
-  letter-spacing: 0.3em;
-  color: var(--color-forest);
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
 .detail-kicker--v3 {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--color-slate);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
 }
 
 .detail-heading {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.01em;
   text-transform: none;
-  color: var(--color-ink);
+  color: var(--primary-color);
   margin: 0 0 0.65rem;
-  line-height: 1.22;
+  line-height: 1.4;
 }
 
 .detail-heading--v0 {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.48rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--primary-color);
 }
 
 .detail-heading--v1 {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  line-height: 1.35;
-  color: var(--color-slate);
+  line-height: 1.4;
+  color: var(--text-light);
 }
 
 .detail-heading--v2 {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.32rem;
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   letter-spacing: 0;
-  color: var(--color-deep);
+  color: var(--text-dark);
 }
 
 .detail-heading--v3 {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.08rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: var(--color-forest);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  color: var(--text-light);
 }
 
 .detail-para {
@@ -1639,7 +1683,7 @@ export default {
 .ficha-meta {
   margin: 1.25rem 0 0;
   padding-top: 1rem;
-  border-top: 1px solid rgba(142, 182, 155, 0.55);
+  border-top: 1px solid rgba(148, 163, 184, 0.45);
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -1688,7 +1732,7 @@ export default {
   }
 
   .section-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
   }
 
   .project-block {

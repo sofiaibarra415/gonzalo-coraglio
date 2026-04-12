@@ -3,10 +3,12 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
-          <div class="footer-logo">
-            <span class="logo-text">GC</span>
-            <span class="logo-name">Gonzalo Coraglio</span>
-          </div>
+          <a href="#inicio" class="footer-logo" aria-label="Gonzalo Coraglio — volver al inicio">
+            <span class="logo-text">
+              <span class="logo-letter">G</span>
+              <span class="logo-letter">C</span>
+            </span>
+          </a>
           <p class="footer-description">
             Arquitecto especializado en diseño innovador y sostenible. 
             Transformando visiones en espacios arquitectónicos excepcionales.
@@ -92,8 +94,8 @@ export default {
 
 <style scoped>
 .footer {
-  background: var(--primary-color);
-  color: var(--white);
+  background: var(--footer-bg);
+  color: var(--footer-text);
   padding: 4rem 0 2rem;
 }
 
@@ -105,43 +107,77 @@ export default {
 }
 
 .footer-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
   margin-bottom: 1.5rem;
+  text-decoration: none;
+  outline: none;
+  width: fit-content;
+}
+
+.footer-logo:focus-visible .logo-text {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
 }
 
 .footer-logo .logo-text {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 2rem;
-  font-weight: 400;
-  color: var(--accent-color);
+  font-family: var(--font-display);
+  font-size: 2.15rem;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--accent-2-color);
   width: 50px;
   height: 50px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--accent-color);
+  gap: 0.02em;
+  border: none;
   border-radius: 4px;
+  background: rgba(255, 255, 255, 0.45);
 }
 
-.footer-logo .logo-name {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: var(--white);
+.footer-logo .logo-letter {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.footer-logo:hover .logo-letter:nth-child(1) {
+  transform: translateY(-5px) rotate(-10deg);
+}
+
+.footer-logo:hover .logo-letter:nth-child(2) {
+  transform: translateY(5px) rotate(10deg);
+  transition-delay: 0.04s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-logo .logo-letter {
+    transition: none;
+  }
+
+  .footer-logo:hover .logo-letter:nth-child(1),
+  .footer-logo:hover .logo-letter:nth-child(2) {
+    transform: none;
+    transition-delay: 0s;
+  }
 }
 
 .footer-description {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--footer-muted);
   line-height: 1.7;
   font-size: 0.95rem;
 }
 
 .footer-section h4 {
-  font-size: 1.2rem;
-  margin-bottom: 1.5rem;
-  color: var(--white);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  color: var(--footer-text);
+  opacity: 0.85;
 }
 
 .footer-links {
@@ -153,7 +189,7 @@ export default {
 }
 
 .footer-links a {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--footer-muted);
   text-decoration: none;
   transition: var(--transition);
   font-size: 0.95rem;
@@ -165,7 +201,7 @@ export default {
 }
 
 .footer-links li:not(:has(a)) {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--footer-muted);
   font-size: 0.95rem;
 }
 
@@ -175,7 +211,7 @@ export default {
 
 .footer-contact li {
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--footer-muted);
   font-size: 0.95rem;
   display: flex;
   align-items: flex-start;
@@ -185,7 +221,7 @@ export default {
 .footer-contact-icon {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--accent-color);
+  color: var(--accent-2-color);
   opacity: 0.95;
 }
 
@@ -196,7 +232,7 @@ export default {
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--footer-border);
   padding-top: 2rem;
   display: flex;
   justify-content: space-between;
@@ -206,7 +242,7 @@ export default {
 }
 
 .footer-bottom p {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -216,7 +252,7 @@ export default {
 }
 
 .social-icon {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--footer-muted);
   text-decoration: none;
   font-size: 0.9rem;
   transition: var(--transition);

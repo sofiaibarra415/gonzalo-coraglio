@@ -1,5 +1,10 @@
 <template>
   <section id="inicio" class="hero">
+    <div class="hero-motion" aria-hidden="true">
+      <div class="hero-motion__mesh"></div>
+      <div class="hero-motion__orb hero-motion__orb--a"></div>
+      <div class="hero-motion__orb hero-motion__orb--b"></div>
+    </div>
     <div class="hero-content">
       <div class="hero-text">
         <h1 class="hero-title">
@@ -82,20 +87,107 @@ export default {
   display: flex;
   align-items: center;
   padding: 120px 2rem 4rem;
-  background: linear-gradient(135deg, var(--color-mint) 0%, var(--white) 100%);
+  background: linear-gradient(
+    125deg,
+    var(--color-mint) 0%,
+    var(--white) 45%,
+    #f1f5f9 100%
+  );
   position: relative;
   overflow: hidden;
 }
 
-.hero::before {
-  content: '';
+/* Fondo con movimiento muy sutil (orbes + malla que respira) */
+.hero-motion {
   position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(142, 182, 155, 0.35) 0%, transparent 70%);
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-motion__mesh {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    118deg,
+    rgba(13, 148, 136, 0.08) 0%,
+    rgba(255, 255, 255, 0.55) 38%,
+    rgba(99, 102, 241, 0.06) 72%,
+    rgba(226, 232, 240, 0.45) 100%
+  );
+  background-size: 200% 200%;
+  animation: hero-mesh-shift 28s ease-in-out infinite;
+}
+
+.hero-motion__orb {
+  position: absolute;
   border-radius: 50%;
+  filter: blur(0.5px);
+}
+
+.hero-motion__orb--a {
+  width: min(72vmax, 720px);
+  height: min(72vmax, 720px);
+  top: -18%;
+  right: -12%;
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(13, 148, 136, 0.12) 0%,
+    rgba(241, 245, 249, 0.35) 45%,
+    transparent 68%
+  );
+  animation: hero-orb-a 22s ease-in-out infinite;
+}
+
+.hero-motion__orb--b {
+  width: min(58vmax, 560px);
+  height: min(58vmax, 560px);
+  bottom: -14%;
+  left: -16%;
+  background: radial-gradient(
+    circle at 55% 55%,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(203, 213, 225, 0.22) 42%,
+    transparent 65%
+  );
+  animation: hero-orb-b 32s ease-in-out infinite;
+}
+
+@keyframes hero-mesh-shift {
+  0%,
+  100% {
+    background-position: 0% 40%;
+    transform: scale(1);
+  }
+  50% {
+    background-position: 100% 60%;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes hero-orb-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-5%, 4%) scale(1.06);
+    opacity: 0.92;
+  }
+}
+
+@keyframes hero-orb-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(6%, -5%) scale(1.04);
+    opacity: 0.88;
+  }
 }
 
 .hero-content {
@@ -114,11 +206,14 @@ export default {
 }
 
 .hero-title {
-  font-size: 4.5rem;
+  font-family: var(--font-display);
+  font-size: 4.75rem;
   font-weight: 700;
-  line-height: 1.1;
+  font-style: normal;
+  line-height: 1.08;
   margin-bottom: 1.5rem;
   color: var(--primary-color);
+  letter-spacing: -0.035em;
 }
 
 .title-line {
@@ -164,7 +259,7 @@ export default {
   background: transparent;
   color: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(35, 83, 71, 0.22);
+  box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
 }
 
 .btn-secondary {
@@ -226,7 +321,7 @@ export default {
   height: min(260px, 40vh);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(5, 31, 32, 0.1);
+  box-shadow: 0 6px 20px rgba(28, 25, 23, 0.1);
 }
 
 .hero-marquee-item :deep(picture),
@@ -254,6 +349,17 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero-motion__mesh,
+  .hero-motion__orb--a,
+  .hero-motion__orb--b {
+    animation: none !important;
+  }
+
+  .hero-motion__mesh {
+    transform: none;
+    background-position: 50% 50%;
+  }
+
   .hero-marquee {
     mask-image: none;
   }

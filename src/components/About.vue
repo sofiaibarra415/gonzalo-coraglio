@@ -146,16 +146,21 @@ export default {
 
 .section-label {
   display: inline-block;
-  color: var(--accent-color);
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 2px;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .section-title {
-  font-size: 3rem;
+  font-family: var(--font-sans);
+  font-size: 2.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--primary-color);
   margin-bottom: 2rem;
 }
@@ -191,10 +196,11 @@ export default {
 }
 
 .stat-number {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-size: 2.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--accent-color);
-  font-family: 'Major Mono Display', ui-monospace, monospace;
   margin-bottom: 0.5rem;
 }
 
@@ -228,7 +234,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(35, 83, 71, 0.18) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, transparent 100%);
 }
 
 .floating-card {
@@ -255,7 +261,10 @@ export default {
 }
 
 .floating-card h3 {
-  font-size: 1.3rem;
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
@@ -271,8 +280,12 @@ export default {
 }
 
 .skills-title {
+  font-family: var(--font-sans);
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
   color: var(--primary-color);
   margin-bottom: 3rem;
 }
@@ -311,7 +324,10 @@ export default {
 }
 
 .skill-card h4 {
-  font-size: 1.3rem;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--primary-color);
   margin-bottom: 1rem;
 }
@@ -342,7 +358,11 @@ export default {
   }
 
   .section-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
+  }
+
+  .skills-title {
+    font-size: 1.65rem;
   }
 
   .about-stats {

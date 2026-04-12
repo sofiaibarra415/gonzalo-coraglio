@@ -1,10 +1,17 @@
 <template>
   <nav class="navigation" :class="{ scrolled: isScrolled }">
     <div class="nav-container">
-      <div class="logo">
-        <span class="logo-text">GC</span>
-        <span class="logo-name">Gonzalo Coraglio</span>
-      </div>
+      <a
+        href="#inicio"
+        class="logo"
+        aria-label="Gonzalo Coraglio — inicio"
+        @click.prevent="scrollTo('inicio')"
+      >
+        <span class="logo-text">
+          <span class="logo-letter">G</span>
+          <span class="logo-letter">C</span>
+        </span>
+      </a>
       <ul class="nav-menu" :class="{ active: menuOpen }">
         <li><a href="#inicio" @click="scrollTo('inicio')">Inicio</a></li>
         <li><a href="#sobre-mi" @click="scrollTo('sobre-mi')">Sobre Mí</a></li>
@@ -65,7 +72,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(218, 241, 222, 0.92);
+  background: rgba(248, 250, 252, 0.94);
   backdrop-filter: blur(10px);
   transition: var(--transition);
   padding: 1.5rem 0;
@@ -88,28 +95,56 @@ export default {
 .logo {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.logo:focus-visible .logo-text {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
 }
 
 .logo-text {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 2rem;
-  font-weight: 400;
-  color: var(--accent-color);
+  font-family: var(--font-display);
+  font-size: 2.15rem;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--accent-2-color);
   width: 50px;
   height: 50px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--accent-color);
-  border-radius: 4px;
+  gap: 0.02em;
+  border: none;
 }
 
-.logo-name {
-  font-family: 'Major Mono Display', ui-monospace, monospace;
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: var(--primary-color);
+.logo-letter {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+  will-change: transform;
+}
+
+.logo:hover .logo-letter:nth-child(1) {
+  transform: translateY(-5px) rotate(-10deg);
+}
+
+.logo:hover .logo-letter:nth-child(2) {
+  transform: translateY(5px) rotate(10deg);
+  transition-delay: 0.04s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-letter {
+    transition: none;
+  }
+
+  .logo:hover .logo-letter:nth-child(1),
+  .logo:hover .logo-letter:nth-child(2) {
+    transform: none;
+    transition-delay: 0s;
+  }
 }
 
 .nav-menu {
@@ -135,7 +170,7 @@ export default {
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--accent-color);
+  background: linear-gradient(90deg, var(--accent-color), var(--accent-2-color));
   transition: var(--transition);
 }
 
@@ -174,7 +209,7 @@ export default {
     top: 80px;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--bg-page);
     flex-direction: column;
     padding: 2rem;
     gap: 1.5rem;
@@ -185,10 +220,6 @@ export default {
 
   .nav-menu.active {
     transform: translateX(0);
-  }
-
-  .logo-name {
-    display: none;
   }
 }
 </style>
