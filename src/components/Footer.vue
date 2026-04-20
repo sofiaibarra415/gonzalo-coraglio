@@ -4,10 +4,7 @@
       <div class="footer-content">
         <div class="footer-section">
           <a href="#inicio" class="footer-logo" aria-label="Gonzalo Coraglio — volver al inicio">
-            <span class="logo-text">
-              <span class="logo-letter">G</span>
-              <span class="logo-letter">C</span>
-            </span>
+            <span class="logo-mark" aria-hidden="true"></span>
           </a>
           <p class="footer-description">
             Arquitecto especializado en diseño innovador y sostenible. 
@@ -113,54 +110,6 @@ export default {
   text-decoration: none;
   outline: none;
   width: fit-content;
-}
-
-.footer-logo:focus-visible .logo-text {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 3px;
-}
-
-.footer-logo .logo-text {
-  font-family: var(--font-display);
-  font-size: 2.15rem;
-  font-weight: 700;
-  font-style: normal;
-  color: var(--accent-2-color);
-  width: 50px;
-  height: 50px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.02em;
-  border: none;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.45);
-}
-
-.footer-logo .logo-letter {
-  display: inline-block;
-  transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
-}
-
-.footer-logo:hover .logo-letter:nth-child(1) {
-  transform: translateY(-5px) rotate(-10deg);
-}
-
-.footer-logo:hover .logo-letter:nth-child(2) {
-  transform: translateY(5px) rotate(10deg);
-  transition-delay: 0.04s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .footer-logo .logo-letter {
-    transition: none;
-  }
-
-  .footer-logo:hover .logo-letter:nth-child(1),
-  .footer-logo:hover .logo-letter:nth-child(2) {
-    transform: none;
-    transition-delay: 0s;
-  }
 }
 
 .footer-description {

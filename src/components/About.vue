@@ -234,7 +234,11 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, transparent 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(43, 43, 43, 0.06) 0%,
+    transparent 100%
+  );
 }
 
 .floating-card {

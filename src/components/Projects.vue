@@ -5,7 +5,7 @@
         <span class="section-label">Portfolio</span>
         <h2 class="section-title">Proyectos</h2>
         <p class="section-subtitle">
-          En escritorio, tocá la miniatura para abrir el carrusel horizontal con imágenes y textos. En móvil, cada proyecto muestra ya el carrusel; tocá el título o la primera imagen para cerrarlo. Podés tener varios abiertos a la vez; Escape cierra todos.
+          Tocá la miniatura para abrir el carrusel; podés dejar varios proyectos expandidos a la vez. En móvil, tocá el título o la primera imagen para cerrar cada uno. Escape cierra todos los detalles abiertos.
         </p>
       </div>
     </div>
@@ -17,7 +17,7 @@
           :key="project.slug"
           class="project-block"
           :class="{
-            'is-expanded': isExpanded(index),
+            'is-expanded': hasExpandedDetail(index),
             'project-block--hero-flip': heroFlippingIndex === index,
             'project-block--uniform-images': project.uniformImages
           }"
@@ -25,9 +25,9 @@
           role="listitem"
         >
           <header
-            v-if="isExpanded(index)"
+            v-if="isPrimaryExpanded(index)"
             class="project-block-head"
-            :class="{ 'project-block-head--collapse': isExpanded(index) }"
+            :class="{ 'project-block-head--collapse': isPrimaryExpanded(index) }"
             @click="onHeadClick(index)"
           >
             <span class="strip-badge">{{ project.badge }}</span>
@@ -37,10 +37,12 @@
 
           <div
             class="project-body"
-            :class="{ 'is-expanded': isExpanded(index) }"
+            :class="{
+              'is-expanded': hasExpandedDetail(index)
+            }"
           >
             <div
-              v-if="!isExpanded(index)"
+              v-if="!hasExpandedDetail(index)"
               class="project-collapsed-layout"
             >
               <header class="project-block-head project-block-head--beside">
@@ -74,13 +76,16 @@
               :duration="{ enter: 0, leave: 360 }"
             >
               <div
-                v-show="isExpanded(index)"
+                v-show="hasExpandedDetail(index)"
                 class="project-detail-outer"
                 :class="{
-                  'project-detail-outer--flip': heroFlippingIndex === index
+                  'project-detail-outer--flip': heroFlippingIndex === index,
+                  'project-detail-outer--accordion-leave':
+                    leavingExpandedIndex === index
                 }"
               >
                 <Swiper
+                  :key="`carousel-${index}-${isMobileProjects}`"
                   class="project-detail-swiper"
                   :class="{
                     'project-detail-swiper--info-ready':
@@ -90,11 +95,11 @@
                   :modules="swiperModules"
                   :slides-per-view="swiperSlidesPerView"
                   :space-between="swiperSpaceBetween"
+                  :pagination="swiperPagination"
                   :auto-height="swiperAutoHeight"
                   :grab-cursor="swiperGrabCursor"
                   :mousewheel="swiperMousewheel"
                   :keyboard="{ enabled: true, onlyInViewport: false }"
-                  :pagination="swiperPagination"
                   role="region"
                   aria-roledescription="carrusel"
                   :aria-label="`Galería horizontal de ${project.title}`"
@@ -296,24 +301,27 @@ export default {
     /** Tras el FLIP de apertura: se muestran textos y resto de slides */
     const carouselInfoReady = ref(new Set())
     const swiperInstances = ref([])
+    /** Animación de cierre (FLIP) del panel */
+    const leavingExpandedIndex = ref(null)
 
-    const isExpanded = (index) => expandedIds.value.includes(index)
+    const isPrimaryExpanded = (index) => expandedIds.value.includes(index)
+
+    const hasExpandedDetail = (index) =>
+      expandedIds.value.includes(index) ||
+      leavingExpandedIndex.value === index
 
     const visibleSlidesForProject = (project, index) => {
       const slides = project.carouselSlides
       const mapWithIndex = (arr) =>
         arr.map((slide, origIndex) => ({ slide, origIndex }))
-      if (!expandedIds.value.includes(index)) return mapWithIndex(slides)
-      if (carouselInfoReady.value.has(index)) return mapWithIndex(slides)
+      if (!hasExpandedDetail(index)) return mapWithIndex(slides)
+      if (
+        carouselInfoReady.value.has(index) ||
+        leavingExpandedIndex.value === index
+      ) {
+        return mapWithIndex(slides)
+      }
       return mapWithIndex(slides.filter((s) => s.isHero))
-    }
-
-    const swiperModules = [Mousewheel, Keyboard, Pagination]
-
-    const swiperPagination = {
-      clickable: true,
-      dynamicBullets: true,
-      dynamicMainBullets: 5
     }
 
     const swiperMousewheel = {
@@ -339,16 +347,28 @@ export default {
       isMobileProjects.value = window.matchMedia('(max-width: 768px)').matches
     }
 
+    const swiperModules = computed(() => {
+      const mods = [Mousewheel, Keyboard]
+      if (isMobileProjects.value) mods.push(Pagination)
+      return mods
+    })
+
+    /** Solo móvil: bullets debajo del carrusel */
+    const swiperPagination = computed(() =>
+      isMobileProjects.value ? { clickable: true } : false
+    )
+
     const swiperSlidesPerView = computed(() =>
       isMobileProjects.value ? 1 : 'auto'
     )
 
+    /* ~gap-16 (BIG): aire horizontal entre slides en desktop */
     const swiperSpaceBetween = computed(() =>
-      isMobileProjects.value ? 22 : 40
+      isMobileProjects.value ? 22 : 64
     )
 
-    /** Móvil: alto del carrusel = alto del slide activo (imagen completa o bloque de texto) */
-    const swiperAutoHeight = computed(() => isMobileProjects.value)
+    /** Falso: el alto lo fija CSS (--carousel-h); así los slides de texto miden lo mismo que las imágenes y el texto puede centrarse en vertical */
+    const swiperAutoHeight = computed(() => false)
 
     const swiperGrabCursor = computed(() => isMobileProjects.value)
 
@@ -371,30 +391,35 @@ export default {
         expandedIds.value = []
         heroFlippingIndex.value = null
         carouselInfoReady.value = new Set()
+        leavingExpandedIndex.value = null
       }
     }
 
-    watch(
-      expandedIds,
-      (ids) => {
-        document.removeEventListener('keydown', onEscapeKey)
-        if (!ids.length) {
-          return
-        }
-        document.addEventListener('keydown', onEscapeKey)
-        const last = ids[ids.length - 1]
-        nextTick(() => {
-          requestAnimationFrame(() => {
-            const sw = swiperInstances.value[last]
-            sw?.el?.focus({ preventScroll: true })
-          })
+    const syncEscapeListener = () => {
+      document.removeEventListener('keydown', onEscapeKey)
+      const hasOpenUi =
+        expandedIds.value.length > 0 || leavingExpandedIndex.value !== null
+      if (!hasOpenUi) {
+        return
+      }
+      document.addEventListener('keydown', onEscapeKey)
+      const last = expandedIds.value[expandedIds.value.length - 1]
+      if (last === undefined) {
+        return
+      }
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          const sw = swiperInstances.value[last]
+          sw?.el?.focus({ preventScroll: true })
         })
-      },
-      { deep: true }
-    )
+      })
+    }
+
+    watch(expandedIds, syncEscapeListener, { deep: true })
+    watch(leavingExpandedIndex, syncEscapeListener)
 
     const onHeadClick = (index) => {
-      if (isExpanded(index)) toggleExpand(index)
+      if (isPrimaryExpanded(index)) toggleExpand(index)
     }
 
     /** Duración FLIP: la info extra del carrusel aparece al terminar; 2s equilibra fluidez y espera */
@@ -832,6 +857,7 @@ export default {
     }
 
     watch(isMobileProjects, (mobile) => {
+      leavingExpandedIndex.value = null
       nextTick(() => {
         if (mobile) {
           expandAllMobile()
@@ -850,6 +876,52 @@ export default {
     })
 
     const CAROUSEL_EXPAND_MS = FLIP_MS
+    const queryProjectArticle = (idx) =>
+      document.querySelector(`[data-project-idx="${idx}"]`)
+
+    /** Centra el bloque del proyecto en el viewport (`block: 'center'`). */
+    const scrollProjectArticleToViewportCenter = (idx, behavior = 'auto') => {
+      if (typeof document === 'undefined') return
+      const el = queryProjectArticle(idx)
+      if (!el) return
+      el.scrollIntoView({
+        block: 'center',
+        inline: 'nearest',
+        behavior:
+          behavior === 'smooth' && !prefersReducedMotion() ? 'smooth' : 'auto'
+      })
+    }
+
+    /**
+     * Escritorio: cada apertura centra el proyecto en el viewport (protagonista) y luego FLIP.
+     */
+    const runDesktopOpenAfterExpand = (openIdx, fallbackThumbRect) => {
+      if (!prefersReducedMotion()) {
+        heroFlippingIndex.value = openIdx
+      }
+      nextTick(() => {
+        /* auto: mismo frame que el FLIP; smooth desincronizaría el rect del thumb */
+        scrollProjectArticleToViewportCenter(openIdx, 'auto')
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const thumbEl = queryThumbFrame(openIdx)
+            const rect =
+              thumbEl?.getBoundingClientRect() ?? fallbackThumbRect
+            runOpenFlip(openIdx, rect, () => {
+              heroFlippingIndex.value = null
+            })
+            requestAnimationFrame(() => {
+              const sw = swiperInstances.value[openIdx]
+              if (sw) {
+                sw.slideTo(0, 0)
+                sw.update()
+                window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
+              }
+            })
+          })
+        })
+      })
+    }
 
     const toggleExpand = (index) => {
       const wasOpen = expandedIds.value.includes(index)
@@ -857,27 +929,36 @@ export default {
       if (!wasOpen) {
         const thumb = queryThumbFrame(index)
         const thumbRect = thumb?.getBoundingClientRect()
+        /* Varios proyectos pueden quedar expandidos a la vez (sin cerrar el anterior → sin saltos de layout). */
+        leavingExpandedIndex.value = null
+        expandedIds.value = [...new Set([...expandedIds.value, index])]
         {
           const cr = new Set(carouselInfoReady.value)
           cr.delete(index)
           carouselInfoReady.value = cr
         }
-        if (!prefersReducedMotion() && !isMobileViewport()) {
-          heroFlippingIndex.value = index
-        }
-        expandedIds.value = [...new Set([...expandedIds.value, index])]
         nextTick(() => {
-          runOpenFlip(index, thumbRect, () => {
-            heroFlippingIndex.value = null
-          })
-          requestAnimationFrame(() => {
-            const sw = swiperInstances.value[index]
-            if (sw) {
-              sw.slideTo(0, 0)
-              sw.update()
-              window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
-            }
-          })
+          if (isMobileViewport()) {
+            scrollProjectArticleToViewportCenter(
+              index,
+              prefersReducedMotion() ? 'auto' : 'smooth'
+            )
+            requestAnimationFrame(() => {
+              runOpenFlip(index, thumbRect, () => {
+                heroFlippingIndex.value = null
+              })
+              requestAnimationFrame(() => {
+                const sw = swiperInstances.value[index]
+                if (sw) {
+                  sw.slideTo(0, 0)
+                  sw.update()
+                  window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
+                }
+              })
+            })
+            return
+          }
+          runDesktopOpenAfterExpand(index, thumbRect)
         })
         return
       }
@@ -930,9 +1011,11 @@ export default {
 
     return {
       projects,
-      isExpanded,
+      isPrimaryExpanded,
+      hasExpandedDetail,
       heroFlippingIndex,
       carouselInfoReady,
+      leavingExpandedIndex,
       visibleSlidesForProject,
       toggleExpand,
       onHeadClick,
@@ -945,6 +1028,7 @@ export default {
       swiperMousewheel,
       onSwiperInit,
       onCarouselSlideChange,
+      isMobileProjects,
       url: assetUrl
     }
   }
@@ -959,8 +1043,9 @@ export default {
 
 .section-header {
   text-align: center;
-  max-width: 720px;
+  max-width: min(960px, 92vw);
   margin: 0 auto 3rem;
+  padding: 0 1rem;
 }
 
 .section-label {
@@ -999,15 +1084,20 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 3.25rem;
+  gap: 4rem;
 }
 
 .project-block {
   scroll-margin-top: 5rem;
-  padding: 0.75rem 0 1.5rem;
+  padding: 1rem 0 3.5rem;
+  margin-bottom: 0;
   background: transparent;
   border-radius: 0;
   box-shadow: none;
+}
+
+.project-block.is-expanded {
+  padding-bottom: 4.5rem;
 }
 
 .project-block:last-child {
@@ -1015,9 +1105,9 @@ export default {
 }
 
 .project-block-head {
-  max-width: 1400px;
+  max-width: 1680px;
   margin: 0 auto 1.25rem;
-  padding: 0 2rem;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
 .project-block-head--collapse {
@@ -1053,13 +1143,13 @@ export default {
   letter-spacing: 0.03em;
 }
 
-/* Contenedor: miniatura 400×300; expandido crece mucho + animación visible */
+/* Contenedor: miniatura más grande; expandido ~950×600 (rect.) / 750 (cuadrados uniform) */
 .project-body {
-  max-width: 1400px;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 0 2rem;
-  --hero-w: 260px;
-  --hero-h: 195px;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  --hero-w: 400px;
+  --hero-h: 253px;
   --carousel-h: 260px;
   --hero-expand-duration: 2s;
   --hero-expand-ease: cubic-bezier(0.18, 0.9, 0.22, 1);
@@ -1071,12 +1161,49 @@ export default {
   --carousel-h: min(420px, 68vw);
 }
 
+@media (min-width: 769px) {
+  .project-body.is-expanded {
+    --carousel-h: min(620px, 75vh);
+  }
+}
+
+/* Desktop grande: franja tipo BIG — alto ~76vh, carril a ancho de ventana */
+@media (min-width: 1024px) {
+  .project-body.is-expanded {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+    --carousel-h: min(620px, 75vh);
+  }
+
+  .project-body.is-expanded .project-detail-outer {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+
+  .project-body.is-expanded .project-detail-swiper {
+    padding-left: 5vw;
+    padding-right: 5vw;
+    box-sizing: border-box;
+  }
+
+  .project-body.is-expanded .project-detail-swiper :deep(.swiper) {
+    border-radius: 0;
+  }
+
+  .project-block.is-expanded {
+    overflow-x: clip;
+  }
+}
+
 /* Tres columnas: texto | imagen (centrada en la página) | hueco espejo → la foto queda en el eje vertical central */
 .project-collapsed-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 1.25rem);
+  gap: clamp(1rem, 3vw, 2.5rem);
   width: 100%;
 }
 
@@ -1085,7 +1212,7 @@ export default {
   justify-self: end;
   margin: 0;
   padding: 0;
-  max-width: min(300px, 36vw);
+  max-width: min(380px, 38vw);
   text-align: right;
   align-self: center;
 }
@@ -1206,6 +1333,50 @@ export default {
   position: relative;
 }
 
+/* Escritorio: al cambiar de proyecto, el anterior se pliega sin un salto brusco */
+@media (min-width: 769px) {
+  .project-block {
+    transition:
+      padding 0.82s cubic-bezier(0.45, 0, 0.55, 1),
+      padding-bottom 0.82s cubic-bezier(0.45, 0, 0.55, 1);
+  }
+
+  .project-detail-outer--accordion-leave {
+    pointer-events: none;
+    overflow: hidden;
+    animation: project-detail-accordion-leave 0.82s cubic-bezier(0.45, 0, 0.55, 1)
+      forwards;
+  }
+}
+
+@keyframes project-detail-accordion-leave {
+  from {
+    opacity: 1;
+    max-height: min(620px, 75vh);
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px) scale(0.992);
+    filter: brightness(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @media (min-width: 769px) {
+    .project-detail-outer--accordion-leave {
+      animation: none;
+    }
+
+    .project-block {
+      transition-duration: 0.01ms;
+    }
+  }
+}
+
 /* Swiper: bullets abajo; arrastre y rueda vía módulos */
 .project-detail-swiper {
   flex: 1;
@@ -1218,36 +1389,11 @@ export default {
   touch-action: pan-x;
   outline: none;
   cursor: pointer;
-  padding: 0 0 2.35rem;
+  padding: 0;
   box-sizing: border-box;
   transition:
     height var(--hero-expand-duration) var(--hero-expand-ease),
     max-height var(--hero-expand-duration) var(--hero-expand-ease);
-}
-
-.project-detail-swiper :deep(.swiper-pagination) {
-  bottom: 0.15rem !important;
-  line-height: 1;
-}
-
-.project-detail-swiper :deep(.swiper-pagination-bullet) {
-  width: 8px;
-  height: 8px;
-  background: var(--color-slate);
-  opacity: 0.35;
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.project-detail-swiper :deep(.swiper-pagination-bullet-active) {
-  opacity: 1;
-  background: var(--color-forest);
-  transform: scale(1.15);
-}
-
-.project-detail-swiper :deep(.swiper-pagination-bullet-active-main) {
-  background: var(--color-ink);
 }
 
 .carousel-slide-parallax-layer {
@@ -1264,8 +1410,8 @@ export default {
 .carousel-slide--text .carousel-slide-parallax-layer,
 .carousel-slide--docs .carousel-slide-parallax-layer,
 .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
-  align-items: stretch;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
 }
 
 .project-detail-swiper :deep(.swiper) {
@@ -1314,18 +1460,57 @@ export default {
   .carousel-slide-parallax-layer {
     height: 100% !important;
   }
+
+  /* Centrado vertical real del bloque de texto dentro del slide */
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+  }
+
+  .carousel-slide--text .carousel-slide-parallax-layer,
+  .carousel-slide--docs .carousel-slide-parallax-layer,
+  .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
+    flex: 1 1 auto;
+    min-height: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .carousel-slide--text .slide-text-inner,
+  .carousel-slide--docs .slide-text-inner,
+  .carousel-slide--pdf-slide .slide-text-inner {
+    margin-top: auto;
+    margin-bottom: auto;
+    flex-shrink: 0;
+    align-self: stretch;
+    width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+  }
+
+  /* Misma altura que el carrusel/imágenes; el bloque de copy queda centrado en la franja */
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    min-height: var(--carousel-h) !important;
+  }
 }
 
-/* Texto / docs / pdf-slide: ancho fijo tipo columna */
+/* Texto / docs / pdf-slide: columna copy (máx. 450px) */
 .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
 .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
 .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
-  width: min(320px, 50vw) !important;
-  max-width: 360px;
+  width: min(450px, 92vw) !important;
+  max-width: 450px;
   flex-shrink: 0;
 }
 
-/* Imágenes: ancho según proporción a alto completo del carrusel (no igual al texto) */
+/* Imágenes: ancho según proporción a alto completo del carrusel */
 .project-detail-swiper
   :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
   width: max-content !important;
@@ -1339,7 +1524,7 @@ export default {
   flex-shrink: 0;
 }
 
-/* Demos: todas las imágenes del carrusel con el mismo encuadre (3∶2) */
+/* Demos uniformes: cuadrados ~750px en desktop */
 .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
 .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
   width: min(360px, 62vw) !important;
@@ -1347,6 +1532,83 @@ export default {
   max-width: min(360px, 88vw) !important;
   max-height: min(240px, 55vh) !important;
   object-fit: cover !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    width: min(450px, 92vw) !important;
+    max-width: 450px;
+  }
+
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+    max-width: min(92vw, 950px);
+  }
+
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
+    max-width: min(85vw, 750px);
+  }
+
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    width: min(620px, 85vw) !important;
+    height: min(620px, 72vh) !important;
+    max-width: min(620px, 92vw) !important;
+    max-height: min(620px, 75vh) !important;
+    object-fit: cover !important;
+  }
+}
+
+/* ≥1024px: franja full-bleed; textos 450px máx.; imágenes ~90vw × 620px máx. */
+@media (min-width: 1024px) {
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    width: min(450px, 92vw) !important;
+    min-width: min(450px, 92vw) !important;
+    max-width: min(450px, 92vw) !important;
+  }
+
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+    max-width: min(90vw, 960px) !important;
+  }
+
+  .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
+    max-width: min(90vw, 960px) !important;
+  }
+
+  .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    max-width: min(90vw, 960px) !important;
+    max-height: min(620px, 75vh) !important;
+  }
+
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    width: min(620px, 90vw) !important;
+    height: min(620px, 75vh) !important;
+    max-width: min(620px, 92vw) !important;
+    max-height: min(620px, 75vh) !important;
+    object-fit: cover !important;
+  }
+
+  .project-detail-swiper :deep(.slide-text-inner) {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+    padding: 0.5rem clamp(1rem, 2vw, 1.75rem) 1.1rem;
+  }
+
+  .project-detail-swiper :deep(.slide-text-inner p) {
+    margin-bottom: 1rem;
+  }
+
+  .project-detail-swiper :deep(.slide-text-inner p:last-child) {
+    margin-bottom: 0;
+  }
 }
 
 /* Transición FLIP (translate+scale) desde JS; sin keyframes para no pisar transform */
@@ -1470,10 +1732,45 @@ export default {
   max-height: min(300px, 48vh);
 }
 
+@media (min-width: 769px) {
+  .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    max-width: min(950px, 85vw);
+    max-height: min(620px, 75vh);
+  }
+}
+
+/*
+ * Slide hero (toggle FLIP): no usar 100%/100% — anula los topes del carrusel y en
+ * móvil (alto auto) el % puede equivaler a la altura intrínseca de la foto.
+ * Un tope explícito un poco menor que el resto evita que un vertical domine la franja.
+ */
 .project-detail-swiper
-  :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img) {
-  max-width: 100% !important;
-  max-height: 100% !important;
+  :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
+.project-detail-swiper
+  :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
+  max-width: min(400px, 74vw) !important;
+  max-height: min(280px, 45vh) !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
+    max-width: min(950px, 85vw) !important;
+    max-height: min(520px, 68vh) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
+    max-width: min(90vw, 960px) !important;
+    max-height: min(520px, 68vh) !important;
+  }
 }
 
 .slide-figure--hero-toggle {
@@ -1523,7 +1820,10 @@ export default {
 }
 
 .slide-text-inner {
-  height: 100%;
+  width: 100%;
+  max-height: 100%;
+  height: auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -1532,7 +1832,14 @@ export default {
   box-sizing: border-box;
   background: transparent;
   scrollbar-width: thin;
-  scrollbar-color: rgba(13, 148, 136, 0.35) transparent;
+  scrollbar-color: rgba(43, 43, 43, 0.35) transparent;
+  align-self: center;
+}
+
+@media (min-width: 769px) {
+  .slide-text-inner {
+    padding: 0.6rem clamp(1.25rem, 2.5vw, 2.25rem) 1.1rem clamp(1.25rem, 2.5vw, 2.25rem);
+  }
 }
 
 .slide-text-inner::-webkit-scrollbar {
@@ -1540,7 +1847,7 @@ export default {
 }
 
 .slide-text-inner::-webkit-scrollbar-thumb {
-  background: rgba(13, 148, 136, 0.28);
+  background: rgba(43, 43, 43, 0.28);
   border-radius: 3px;
 }
 
@@ -1735,7 +2042,7 @@ export default {
 .ficha-meta {
   margin: 1.25rem 0 0;
   padding-top: 1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.45);
+  border-top: 1px solid rgba(179, 179, 179, 0.55);
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -1841,8 +2148,13 @@ export default {
     object-position: center;
   }
 
+  /* Móvil: franja baja para no dominar la pantalla */
   .project-body.is-expanded {
-    --carousel-h: auto;
+    --carousel-h: min(340px, 46dvh);
+  }
+
+  .projects-stack {
+    gap: 0;
   }
 
   .projects-stack-wrap,
@@ -1864,13 +2176,13 @@ export default {
     min-width: 0;
   }
 
-  /* Carrusel: 1 slide, alto = contenido, swipe desde cualquier zona */
+  /* Carrusel: espacio inferior para bullets (solo móvil activa Pagination) */
   .project-detail-swiper {
     max-width: 100%;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
-    padding: 0 0 2.1rem;
+    padding: 0 0 2.35rem;
     padding-left: 0;
     padding-right: 0;
     height: auto !important;
@@ -1921,6 +2233,14 @@ export default {
     max-width: 100% !important;
   }
 
+  .project-detail-swiper :deep(.carousel-slide--text .slide-text-inner),
+  .project-detail-swiper :deep(.carousel-slide--docs .slide-text-inner),
+  .project-detail-swiper :deep(.carousel-slide--pdf-slide .slide-text-inner) {
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .carousel-slide {
     height: auto !important;
     min-height: 0;
@@ -1962,9 +2282,16 @@ export default {
     max-width: 100% !important;
     width: auto !important;
     height: auto !important;
-    max-height: min(88dvh, 900px) !important;
+    max-height: min(340px, 46dvh) !important;
     object-fit: contain !important;
     object-position: center !important;
+  }
+
+  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image img),
+  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: var(--carousel-h) !important;
   }
 
   .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
@@ -1972,8 +2299,104 @@ export default {
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
-    max-height: min(88dvh, 900px) !important;
+    max-height: min(340px, 46dvh) !important;
     object-fit: contain !important;
+  }
+
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image img),
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image .slide-img) {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: var(--carousel-h) !important;
+  }
+
+  .project-detail-swiper :deep(.swiper-pagination) {
+    bottom: 0.35rem;
+    line-height: 1;
+  }
+
+  .project-detail-swiper :deep(.swiper-pagination-bullet) {
+    width: 7px;
+    height: 7px;
+    background: var(--text-dark, #2b2b2b);
+    opacity: 0.28;
+    vertical-align: middle;
+  }
+
+  .project-detail-swiper :deep(.swiper-pagination-bullet-active) {
+    opacity: 1;
+    background: var(--primary-color, #2b2b2b);
+  }
+
+  /* Proyecto expandido: alto fijo como las fotos → texto centrado en la misma franja */
+  .project-body.is-expanded .project-detail-swiper {
+    height: var(--carousel-h) !important;
+    max-height: var(--carousel-h) !important;
+    min-height: var(--carousel-h);
+  }
+
+  .project-body.is-expanded .project-detail-swiper :deep(.swiper) {
+    height: 100% !important;
+  }
+
+  .project-body.is-expanded .project-detail-swiper :deep(.swiper-wrapper) {
+    height: 100% !important;
+  }
+
+  .project-body.is-expanded .project-detail-swiper :deep(.swiper-slide) {
+    height: 100% !important;
+  }
+
+  .project-body.is-expanded .carousel-slide {
+    height: 100% !important;
+  }
+
+  .project-body.is-expanded .carousel-slide-parallax-layer {
+    height: 100% !important;
+    min-height: 100% !important;
+    justify-content: center;
+  }
+
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--text),
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--docs),
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--pdf-slide) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+  }
+
+  .project-body.is-expanded .carousel-slide--text .carousel-slide-parallax-layer,
+  .project-body.is-expanded .carousel-slide--docs .carousel-slide-parallax-layer,
+  .project-body.is-expanded .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
+    flex: 1 1 auto;
+    min-height: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .project-body.is-expanded .carousel-slide--text .slide-text-inner,
+  .project-body.is-expanded .carousel-slide--docs .slide-text-inner,
+  .project-body.is-expanded .carousel-slide--pdf-slide .slide-text-inner {
+    margin-top: auto;
+    margin-bottom: auto;
+    flex-shrink: 0;
+    max-height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .slide-text-inner {
@@ -1987,14 +2410,12 @@ export default {
     overscroll-behavior: auto;
   }
 
-  .slide-text-inner::-webkit-scrollbar {
-    display: none;
+  .project-body.is-expanded .slide-text-inner {
+    max-height: 100% !important;
   }
 
-  .project-detail-swiper :deep(.swiper-pagination) {
-    position: relative;
-    bottom: auto !important;
-    margin-top: 0.75rem;
+  .slide-text-inner::-webkit-scrollbar {
+    display: none;
   }
 }
 </style>

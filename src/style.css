@@ -7,29 +7,92 @@
 :root {
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-display: 'Montserrat', system-ui, sans-serif;
-  /* Neutros fríos (pizarra) + acento teal + apoyo índigo */
-  --color-ink: #0f172a;
-  --color-deep: #1e293b;
-  --color-forest: #134e4a;
-  --color-slate: #0f766e;
-  --color-sage: #64748b;
-  --color-mint: #e2e8f0;
-  --accent-2-color: #6366f1;
-  --accent-2-hover: #4f46e5;
-  --primary-color: #0f172a;
-  --secondary-color: #cbd5e1;
-  --accent-color: #0d9488;
-  --accent-hover: #0f766e;
-  --text-dark: #1e293b;
-  --text-light: #64748b;
-  --text-muted: #94a3b8;
+
+  /* Paleta escala de grises */
+  --color-charcoal: #2b2b2b;
+  --color-ironclad: #565656;
+  --color-urban-fog: #848484;
+  --color-moonlit: #b3b3b3;
   --white: #ffffff;
-  --bg-page: #f8fafc;
-  --footer-bg: #e2e8f0;
-  --footer-text: #1e293b;
-  --footer-muted: #64748b;
-  --footer-border: rgba(15, 23, 42, 0.09);
+
+  /* Semánticos (compatibilidad con componentes existentes) */
+  --color-ink: var(--color-charcoal);
+  --color-deep: var(--color-ironclad);
+  --color-forest: var(--color-ironclad);
+  --color-slate: var(--color-urban-fog);
+  --color-sage: var(--color-urban-fog);
+  --color-mint: rgba(179, 179, 179, 0.18);
+
+  --primary-color: var(--color-charcoal);
+  --secondary-color: var(--color-moonlit);
+  --accent-color: var(--color-ironclad);
+  --accent-hover: var(--color-charcoal);
+  --accent-2-color: var(--color-urban-fog);
+  --accent-2-hover: var(--color-ironclad);
+
+  --text-dark: var(--color-ironclad);
+  --text-light: var(--color-urban-fog);
+  --text-muted: var(--color-moonlit);
+
+  --bg-page: #ffffff;
+  --footer-bg: #ffffff;
+  --footer-text: var(--color-charcoal);
+  --footer-muted: var(--color-urban-fog);
+  --footer-border: rgba(43, 43, 43, 0.12);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Logo: forma PNG teñida con Charcoal Noir (#2B2B2B) */
+.logo-mark {
+  display: block;
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-charcoal);
+  -webkit-mask-image: url('/images/logo-gc.png');
+  mask-image: url('/images/logo-gc.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transform-origin: center center;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.45, 0.64, 1),
+    filter 0.4s ease;
+}
+
+.logo:hover .logo-mark,
+.footer-logo:hover .logo-mark {
+  transform: translateY(-5px) scale(1.08) rotate(-5deg);
+  filter: drop-shadow(0 10px 22px rgba(43, 43, 43, 0.14));
+}
+
+.logo:active .logo-mark,
+.footer-logo:active .logo-mark {
+  transform: translateY(-2px) scale(1.03) rotate(-2deg);
+  transition-duration: 0.12s;
+}
+
+.logo:focus-visible .logo-mark,
+.footer-logo:focus-visible .logo-mark {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-mark {
+    transition: opacity 0.2s ease;
+  }
+
+  .logo:hover .logo-mark,
+  .footer-logo:hover .logo-mark,
+  .logo:active .logo-mark,
+  .footer-logo:active .logo-mark {
+    transform: none;
+    filter: brightness(1.05);
+  }
 }
 
 html {
@@ -55,6 +118,7 @@ h6 {
   font-style: normal;
   line-height: 1.15;
   letter-spacing: -0.02em;
+  color: var(--color-charcoal);
 }
 
 h1 {
