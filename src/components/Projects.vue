@@ -112,7 +112,12 @@
                     class="carousel-slide"
                     :class="[
                       'carousel-slide--' + item.slide.type,
-                      { 'carousel-slide--hero': item.slide.isHero }
+                      {
+                        'carousel-slide--hero': item.slide.isHero,
+                        'carousel-slide--sequence-tall':
+                          item.slide.type === 'image-sequence' &&
+                          item.slide.sequenceTall
+                      }
                     ]"
                   >
                     <div class="carousel-slide-parallax-layer">
@@ -139,6 +144,17 @@
                           :alt="item.slide.alt || `Imagen ${item.origIndex + 1}`"
                           img-class="slide-img"
                           loading="lazy"
+                        />
+                      </figure>
+
+                      <figure
+                        v-else-if="item.slide.type === 'image-sequence'"
+                        class="slide-figure slide-figure--inner-sequence"
+                      >
+                        <ImageSequencePlayer
+                          :images="item.slide.images"
+                          :alt-base="item.slide.alt || 'Vista'"
+                          :interval-ms="2000"
                         />
                       </figure>
 
@@ -290,10 +306,11 @@ import 'swiper/css'
 import 'swiper/css/pagination'
 import { assetUrl } from '../utils/images'
 import OptimizedPicture from './OptimizedPicture.vue'
+import ImageSequencePlayer from './ImageSequencePlayer.vue'
 
 export default {
   name: 'Projects',
-  components: { OptimizedPicture, Swiper, SwiperSlide },
+  components: { OptimizedPicture, ImageSequencePlayer, Swiper, SwiperSlide },
   setup() {
     const expandedIds = ref([])
     /** Durante FLIP: el carrusel no recorta ni anima el alto en paralelo a la imagen */
@@ -672,6 +689,16 @@ export default {
             paragraphs: [LOREM]
           },
           {
+            imageCarousel: [
+              '/Mediateca/detalle-seccion-0.png',
+              '/Mediateca/detalle-seccion-01.png'
+            ],
+            imageCarouselTall: true,
+            kicker: 'Detalle',
+            heading: 'Cortes constructivos',
+            paragraphs: [LOREM]
+          },
+          {
             kicker: 'Plano',
             heading: 'Corte A.A (PDF)',
             paragraphs: [LOREM],
@@ -781,7 +808,24 @@ export default {
     const buildSlidesFromPanels = (p) => {
       const out = []
       for (const panel of p.carouselPanels) {
-        if (panel.image) {
+        if (panel.imageCarousel?.length) {
+          const base = panel.imageCarousel
+          const cycles =
+            typeof panel.imageCarouselRepeat === 'number' &&
+            panel.imageCarouselRepeat > 0
+              ? Math.min(Math.floor(panel.imageCarouselRepeat), 12)
+              : 1
+          const images =
+            cycles <= 1
+              ? [...base]
+              : Array.from({ length: cycles }, () => [...base]).flat()
+          out.push({
+            type: 'image-sequence',
+            images,
+            alt: panel.heading || 'Vista',
+            sequenceTall: panel.imageCarouselTall === true
+          })
+        } else if (panel.image) {
           out.push({
             type: 'image',
             src: panel.image,
@@ -1512,7 +1556,9 @@ export default {
 
 /* Imágenes: ancho según proporción a alto completo del carrusel */
 .project-detail-swiper
-  :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+  :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
+.project-detail-swiper
+  :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
   width: max-content !important;
   max-width: min(88vw, 620px);
   flex-shrink: 0;
@@ -1543,7 +1589,9 @@ export default {
   }
 
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
     max-width: min(92vw, 950px);
   }
 
@@ -1572,7 +1620,9 @@ export default {
   }
 
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
     max-width: min(90vw, 960px) !important;
   }
 
@@ -1581,7 +1631,9 @@ export default {
   }
 
   .project-detail-swiper :deep(.carousel-slide--image img),
-  .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+  .project-detail-swiper :deep(.carousel-slide--image .slide-img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
     max-width: min(90vw, 960px) !important;
     max-height: min(620px, 75vh) !important;
   }
@@ -1652,7 +1704,8 @@ export default {
   overflow: visible !important;
 }
 
-.project-detail-outer--flip .carousel-slide--image {
+.project-detail-outer--flip .carousel-slide--image,
+.project-detail-outer--flip .carousel-slide--image-sequence {
   overflow: visible !important;
 }
 
@@ -1677,7 +1730,8 @@ export default {
   box-sizing: border-box;
 }
 
-.carousel-slide--image {
+.carousel-slide--image,
+.carousel-slide--image-sequence {
   background: transparent;
   border-radius: 0;
   overflow: hidden;
@@ -1695,7 +1749,8 @@ export default {
 
 /* Imágenes del carrusel: siempre alto = 100% del carrusel (misma lectura que el hero) */
 .carousel-slide--image .slide-figure,
-.carousel-slide--image .slide-figure--hero-toggle {
+.carousel-slide--image .slide-figure--hero-toggle,
+.carousel-slide--image-sequence .slide-figure--inner-sequence {
   height: 100%;
   min-height: 100%;
   width: 100%;
@@ -1708,7 +1763,8 @@ export default {
 }
 
 .carousel-slide--image .slide-figure :deep(picture),
-.carousel-slide--image .slide-figure--hero-toggle :deep(picture) {
+.carousel-slide--image .slide-figure--hero-toggle :deep(picture),
+.carousel-slide--image-sequence .image-sequence-player :deep(picture) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1722,7 +1778,9 @@ export default {
 }
 
 .project-detail-swiper :deep(.carousel-slide--image img),
-.project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+.project-detail-swiper :deep(.carousel-slide--image .slide-img),
+.project-detail-swiper :deep(.carousel-slide--image-sequence img),
+.project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
   display: block;
   object-fit: contain;
   object-position: center !important;
@@ -1734,9 +1792,42 @@ export default {
 
 @media (min-width: 769px) {
   .project-detail-swiper :deep(.carousel-slide--image img),
-  .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+  .project-detail-swiper :deep(.carousel-slide--image .slide-img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
     max-width: min(950px, 85vw);
     max-height: min(620px, 75vh);
+  }
+}
+
+/* Láminas verticales: misma altura máx. que las demás; ancho proporcional (sin estirar) */
+.project-detail-swiper
+  :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall img),
+.project-detail-swiper
+  :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
+  width: auto !important;
+  max-width: min(400px, 74vw) !important;
+  max-height: min(300px, 48vh) !important;
+  object-fit: contain !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall img),
+  .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
+    max-width: min(950px, 85vw) !important;
+    max-height: min(620px, 75vh) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall img),
+  .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
+    max-width: min(90vw, 960px) !important;
+    max-height: min(620px, 75vh) !important;
   }
 }
 
@@ -2213,7 +2304,9 @@ export default {
   }
 
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -2258,12 +2351,14 @@ export default {
     touch-action: pan-x pinch-zoom;
   }
 
-  .carousel-slide--image {
+  .carousel-slide--image,
+  .carousel-slide--image-sequence {
     overflow: visible !important;
   }
 
   .carousel-slide--image .slide-figure,
-  .carousel-slide--image .slide-figure--hero-toggle {
+  .carousel-slide--image .slide-figure--hero-toggle,
+  .carousel-slide--image-sequence .slide-figure--inner-sequence {
     flex-shrink: 0;
     height: auto !important;
     min-height: 0 !important;
@@ -2271,13 +2366,16 @@ export default {
   }
 
   .carousel-slide--image .slide-figure :deep(picture),
-  .carousel-slide--image .slide-figure--hero-toggle :deep(picture) {
+  .carousel-slide--image .slide-figure--hero-toggle :deep(picture),
+  .carousel-slide--image-sequence .image-sequence-player :deep(picture) {
     height: auto !important;
     max-height: none !important;
   }
 
   .project-detail-swiper :deep(.carousel-slide--image img),
-  .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+  .project-detail-swiper :deep(.carousel-slide--image .slide-img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence img),
+  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
     display: block !important;
     max-width: 100% !important;
     width: auto !important;
@@ -2288,14 +2386,30 @@ export default {
   }
 
   .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image img),
-  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image .slide-img),
+  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image-sequence img),
+  .project-body.is-expanded .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
     width: 100% !important;
     max-width: none !important;
     max-height: var(--carousel-h) !important;
   }
 
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall img),
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
+    width: auto !important;
+    max-width: min(92vw, 960px) !important;
+    max-height: var(--carousel-h) !important;
+    object-fit: contain !important;
+  }
+
   .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
-  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img) {
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image .slide-img),
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image-sequence img),
+  .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
@@ -2310,10 +2424,32 @@ export default {
   .project-block--uniform-images
     .project-body.is-expanded
     .project-detail-swiper
-    :deep(.carousel-slide--image .slide-img) {
+    :deep(.carousel-slide--image .slide-img),
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence img),
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence .slide-img) {
     width: 100% !important;
     max-width: none !important;
     max-height: var(--carousel-h) !important;
+  }
+
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall img),
+  .project-block--uniform-images
+    .project-body.is-expanded
+    .project-detail-swiper
+    :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
+    width: auto !important;
+    max-width: min(92vw, 960px) !important;
+    max-height: var(--carousel-h) !important;
+    object-fit: contain !important;
   }
 
   .project-detail-swiper :deep(.swiper-pagination) {
