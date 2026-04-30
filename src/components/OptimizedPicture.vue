@@ -1,6 +1,7 @@
 <template>
+  <!-- Sin `<source type="image/webp">` hasta que existan los .webp (`npm run optimize-images`):
+       si el WebP falta, varios navegadores no muestran el fallback del <img>. -->
   <picture>
-    <source :srcset="webp" type="image/webp" />
     <img
       :src="fallback"
       :alt="alt"
@@ -16,7 +17,7 @@
 
 <script>
 import { computed } from 'vue'
-import { assetUrl, webpUrl } from '../utils/images'
+import { assetUrl } from '../utils/images'
 
 export default {
   name: 'OptimizedPicture',
@@ -32,8 +33,7 @@ export default {
   },
   setup(props) {
     const fallback = computed(() => assetUrl(props.src))
-    const webp = computed(() => webpUrl(props.src))
-    return { fallback, webp }
+    return { fallback }
   }
 }
 </script>

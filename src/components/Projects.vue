@@ -110,13 +110,15 @@
                     v-for="item in visibleSlidesForProject(project, index)"
                     :key="`${project.slug}-slide-${item.origIndex}`"
                     class="carousel-slide"
-                    :class="[
+                      :class="[
                       'carousel-slide--' + item.slide.type,
                       {
                         'carousel-slide--hero': item.slide.isHero,
                         'carousel-slide--sequence-tall':
-                          item.slide.type === 'image-sequence' &&
-                          item.slide.sequenceTall
+                          (item.slide.type === 'image-sequence' &&
+                            item.slide.sequenceTall) ||
+                          (item.slide.type === 'dual-image-sequence' &&
+                            item.slide.sequenceTall)
                       }
                     ]"
                   >
@@ -156,6 +158,47 @@
                           :alt-base="item.slide.alt || 'Vista'"
                           :interval-ms="2000"
                         />
+                      </figure>
+
+                      <figure
+                        v-else-if="item.slide.type === 'dual-image-sequence'"
+                        class="slide-figure slide-figure--dual-sequence"
+                      >
+                        <PairedDualColumnsPlayer
+                          v-if="item.slide.variant === 'sync-pairs'"
+                          :pairs="item.slide.pairs"
+                          :left-label="item.slide.leftLabel"
+                          :right-label="item.slide.rightLabel"
+                          alt-left="Detalle"
+                          alt-right="Gráfico"
+                          :interval-ms="2000"
+                          :graphic-mini-left-align-bottom="
+                            item.slide.graphicMiniLeftAlignBottom
+                          "
+                        />
+                        <div
+                          v-else
+                          class="dual-sequence-grid"
+                          role="group"
+                        >
+                          <div
+                            v-for="(col, dci) in item.slide.columns"
+                            :key="dci"
+                            class="dual-sequence-col"
+                          >
+                            <p
+                              v-if="col.label"
+                              class="dual-sequence-col__label"
+                            >
+                              {{ col.label }}
+                            </p>
+                            <ImageSequencePlayer
+                              :images="col.images"
+                              :alt-base="col.altBase || 'Vista'"
+                              :interval-ms="2000"
+                            />
+                          </div>
+                        </div>
                       </figure>
 
                       <div
@@ -307,10 +350,17 @@ import 'swiper/css/pagination'
 import { assetUrl } from '../utils/images'
 import OptimizedPicture from './OptimizedPicture.vue'
 import ImageSequencePlayer from './ImageSequencePlayer.vue'
+import PairedDualColumnsPlayer from './PairedDualColumnsPlayer.vue'
 
 export default {
   name: 'Projects',
-  components: { OptimizedPicture, ImageSequencePlayer, Swiper, SwiperSlide },
+  components: {
+    OptimizedPicture,
+    ImageSequencePlayer,
+    PairedDualColumnsPlayer,
+    Swiper,
+    SwiperSlide
+  },
   setup() {
     const expandedIds = ref([])
     /** Durante FLIP: el carrusel no recorta ni anima el alto en paralelo a la imagen */
@@ -674,132 +724,73 @@ export default {
         area: '—',
         uniformImages: false,
         pdfs: null,
-        heroImage: '/Mediateca/imagen 01 axo aerea.jpg',
+        heroImage: '/Mediateca/imagen 01 axo aerea_1 - Photo.jpg',
         carouselPanels: [
           {
-            image: '/Mediateca/imagen 01 axo aerea.jpg',
+            image: '/Mediateca/imagen 01 axo aerea_1 - Photo.jpg',
             kicker: 'Vista 1',
-            heading: 'Axonométrica general',
+            heading: 'Axonométrica — toma 1',
             paragraphs: [LOREM, LOREM2]
           },
           {
-            image: '/Mediateca/imagen 02.jpg',
+            image: '/Mediateca/imagen 01 axo aerea_2 - Photo.jpg',
             kicker: 'Vista 2',
-            heading: 'Interior',
+            heading: 'Axonométrica — toma 2',
+            paragraphs: [LOREM]
+          },
+          {
+            image: '/Mediateca/imagen 01 axo aerea_3 - Photo.jpg',
+            kicker: 'Vista 3',
+            heading: 'Axonométrica — toma 3',
+            paragraphs: [LOREM, LOREM2]
+          },
+          {
+            image: '/Mediateca/imagen 01 axo aerea_4 - Photo.jpg',
+            kicker: 'Vista 4',
+            heading: 'Axonométrica — toma 4',
             paragraphs: [LOREM]
           },
           {
             imageCarousel: [
-              '/Mediateca/detalle-seccion-0.png',
-              '/Mediateca/detalle-seccion-01.png'
+              '/Mediateca/Plantas y corte/Nivel 0.png',
+              '/Mediateca/Plantas y corte/Nivel 1.png',
+              '/Mediateca/Plantas y corte/Nivel 2.png',
+              '/Mediateca/Plantas y corte/Nivel 3.png',
+              '/Mediateca/Plantas y corte/Nivel 4.png',
+              '/Mediateca/Plantas y corte/Nivel 5.png',
+              '/Mediateca/Plantas y corte/Nivel 6 png.png',
+              '/Mediateca/Plantas y corte/Corte A.png'
             ],
-            imageCarouselTall: true,
+            kicker: 'Plantas y corte',
+            heading: 'Recorrido de planos y sección',
+            paragraphs: [
+              'Las imágenes alternan en el mismo encuadre, como una animación de revisión del conjunto de láminas.'
+            ]
+          },
+          {
+            dualImageCarousel: {
+              syncPairs: true,
+              graphicMiniLeftAlignBottom: true,
+              leftLabel: 'Detalle',
+              rightLabel: '',
+              pairs: [
+                {
+                  left: '/Mediateca/Detalle ( 2 imagenes )/Detalle 0.png',
+                  right:
+                    '/Mediateca/Detalle ( 2 imagenes )/grafico para detalle 0 chiquito.png'
+                },
+                {
+                  left: '/Mediateca/Detalle ( 2 imagenes )/Detalle 01.png',
+                  right:
+                    '/Mediateca/Detalle ( 2 imagenes )/grafico para detalle 01 chiquito.png'
+                }
+              ]
+            },
             kicker: 'Detalle',
-            heading: 'Cortes constructivos',
-            paragraphs: [LOREM]
-          },
-          {
-            kicker: 'Plano',
-            heading: 'Corte A.A (PDF)',
-            paragraphs: [LOREM],
-            pdfLink: {
-              label: 'Abrir PDF — Corte A.A',
-              path: '/Mediateca/CORTE A.A - IND.pdf'
-            }
-          },
-          {
-            kicker: 'Plano',
-            heading: 'Nivel 2 (PDF)',
-            paragraphs: [LOREM],
-            pdfLink: {
-              label: 'Abrir PDF — Nivel 2',
-              path: '/Mediateca/NIVEL 2 TP IND - FINAL .pdf'
-            }
-          },
-          {
-            kicker: 'Plano',
-            heading: 'Planta baja (PDF)',
-            paragraphs: [LOREM],
-            pdfLink: {
-              label: 'Abrir PDF — Planta baja',
-              path: '/Mediateca/PLANTA BAJA TP IND - FINAL .pdf'
-            }
-          }
-        ]
-      },
-      {
-        slug: 'demo-uniforme-a',
-        title: 'Demo — mismo tamaño A',
-        badge: 'Uniforme',
-        category: 'Demostración',
-        location: '—',
-        year: '2024',
-        area: '—',
-        uniformImages: true,
-        pdfs: null,
-        heroImage: '/IMG random/Imagen exterior.jpg',
-        carouselPanels: [
-          {
-            image: '/IMG random/Imagen exterior.jpg',
-            kicker: 'Toma A',
-            heading: 'Encuadre fijo 3∶2',
-            paragraphs: [LOREM]
-          },
-          {
-            image: '/IMG random/imagen interior 1.jpg',
-            kicker: 'Toma B',
-            heading: 'Misma caja, otra imagen',
-            paragraphs: [LOREM, LOREM2]
-          },
-          {
-            image: '/IMG random/Imagen exterior.jpg',
-            kicker: 'Toma C',
-            heading: 'Continuidad visual',
-            paragraphs: [LOREM]
-          },
-          {
-            image: '/IMG random/imagen interior 1.jpg',
-            kicker: 'Toma D',
-            heading: 'Cierre de serie',
-            paragraphs: [LOREM]
-          }
-        ]
-      },
-      {
-        slug: 'demo-uniforme-b',
-        title: 'Demo — mismo tamaño B',
-        badge: 'Uniforme',
-        category: 'Demostración',
-        location: '—',
-        year: '2024',
-        area: '—',
-        uniformImages: true,
-        pdfs: null,
-        heroImage: '/IMG random/imagen interior 1.jpg',
-        carouselPanels: [
-          {
-            image: '/IMG random/imagen interior 1.jpg',
-            kicker: 'Serie 1',
-            heading: 'Rectángulos alineados',
-            paragraphs: [LOREM, LOREM2]
-          },
-          {
-            image: '/IMG random/Imagen exterior.jpg',
-            kicker: 'Serie 2',
-            heading: 'Misma grilla horizontal',
-            paragraphs: [LOREM]
-          },
-          {
-            image: '/IMG random/imagen interior 1.jpg',
-            kicker: 'Serie 3',
-            heading: 'Carrusel homogéneo',
-            paragraphs: [LOREM]
-          },
-          {
-            image: '/IMG random/Imagen exterior.jpg',
-            kicker: 'Serie 4',
-            heading: 'Última vista',
-            paragraphs: [LOREM, LOREM2]
+            heading: 'Dos lecturas en paralelo',
+            paragraphs: [
+              'Detalle 0 se muestra junto al gráfico del detalle 0; Detalle 1 junto al gráfico del detalle 1. Las dos columnas cambian al unísono cada dos segundos.'
+            ]
           }
         ]
       }
@@ -808,7 +799,36 @@ export default {
     const buildSlidesFromPanels = (p) => {
       const out = []
       for (const panel of p.carouselPanels) {
-        if (panel.imageCarousel?.length) {
+        if (
+          panel.dualImageCarousel?.syncPairs &&
+          panel.dualImageCarousel.pairs?.length >= 2
+        ) {
+          const pairs = panel.dualImageCarousel.pairs.map((pair) => ({
+            left: pair.left,
+            right: pair.right
+          }))
+          out.push({
+            type: 'dual-image-sequence',
+            variant: 'sync-pairs',
+            pairs,
+            leftLabel: panel.dualImageCarousel.leftLabel || '',
+            rightLabel: panel.dualImageCarousel.rightLabel || '',
+            sequenceTall: panel.imageCarouselTall === true,
+            graphicMiniLeftAlignBottom:
+              !!panel.dualImageCarousel.graphicMiniLeftAlignBottom
+          })
+        } else if (panel.dualImageCarousel?.columns?.length >= 2) {
+          const cols = panel.dualImageCarousel.columns.slice(0, 2).map((col) => ({
+            images: [...(col.images || [])],
+            altBase: col.altBase || col.label || 'Vista',
+            label: col.label || ''
+          }))
+          out.push({
+            type: 'dual-image-sequence',
+            columns: cols,
+            sequenceTall: panel.imageCarouselTall === true
+          })
+        } else if (panel.imageCarousel?.length) {
           const base = panel.imageCarousel
           const cycles =
             typeof panel.imageCarouselRepeat === 'number' &&
@@ -1564,6 +1584,14 @@ export default {
   flex-shrink: 0;
 }
 
+/* Dos columnas de secuencias: slide más ancho */
+.project-detail-swiper
+  :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)) {
+  width: max-content !important;
+  max-width: min(94vw, 960px);
+  flex-shrink: 0;
+}
+
 .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
   width: auto;
   max-width: min(380px, 78vw);
@@ -1591,7 +1619,9 @@ export default {
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)) {
     max-width: min(92vw, 950px);
   }
 
@@ -1622,7 +1652,9 @@ export default {
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--image:not(.carousel-slide--hero)),
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)) {
     max-width: min(90vw, 960px) !important;
   }
 
@@ -1633,9 +1665,53 @@ export default {
   .project-detail-swiper :deep(.carousel-slide--image img),
   .project-detail-swiper :deep(.carousel-slide--image .slide-img),
   .project-detail-swiper :deep(.carousel-slide--image-sequence img),
-  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
+  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img),
+  .project-detail-swiper :deep(.carousel-slide--dual-image-sequence img),
+  .project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
     max-width: min(90vw, 960px) !important;
     max-height: min(620px, 75vh) !important;
+  }
+
+  .project-detail-swiper
+    :deep(.carousel-slide--dual-image-sequence .dual-sequence-col img),
+  .project-detail-swiper
+    :deep(.carousel-slide--dual-image-sequence .dual-sequence-col .slide-img) {
+    max-width: min(460px, 42vw) !important;
+    max-height: min(560px, 68vh) !important;
+  }
+
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .dual-sequence-grid--sidebar
+        .dual-sequence-col--detalle
+        img
+    ),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .dual-sequence-grid--sidebar
+        .dual-sequence-col--detalle
+        .slide-img
+    ) {
+    max-width: min(90vw, 960px) !important;
+    max-height: min(620px, 75vh) !important;
+  }
+
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        img
+    ),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        .slide-img
+    ) {
+    max-width: min(240px, 100%) !important;
+    max-height: min(180px, 30vh) !important;
   }
 
   .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
@@ -1705,7 +1781,8 @@ export default {
 }
 
 .project-detail-outer--flip .carousel-slide--image,
-.project-detail-outer--flip .carousel-slide--image-sequence {
+.project-detail-outer--flip .carousel-slide--image-sequence,
+.project-detail-outer--flip .carousel-slide--dual-image-sequence {
   overflow: visible !important;
 }
 
@@ -1731,7 +1808,8 @@ export default {
 }
 
 .carousel-slide--image,
-.carousel-slide--image-sequence {
+.carousel-slide--image-sequence,
+.carousel-slide--dual-image-sequence {
   background: transparent;
   border-radius: 0;
   overflow: hidden;
@@ -1750,7 +1828,8 @@ export default {
 /* Imágenes del carrusel: siempre alto = 100% del carrusel (misma lectura que el hero) */
 .carousel-slide--image .slide-figure,
 .carousel-slide--image .slide-figure--hero-toggle,
-.carousel-slide--image-sequence .slide-figure--inner-sequence {
+.carousel-slide--image-sequence .slide-figure--inner-sequence,
+.carousel-slide--dual-image-sequence .slide-figure--dual-sequence {
   height: 100%;
   min-height: 100%;
   width: 100%;
@@ -1764,7 +1843,8 @@ export default {
 
 .carousel-slide--image .slide-figure :deep(picture),
 .carousel-slide--image .slide-figure--hero-toggle :deep(picture),
-.carousel-slide--image-sequence .image-sequence-player :deep(picture) {
+.carousel-slide--image-sequence .image-sequence-player :deep(picture),
+.carousel-slide--dual-image-sequence .image-sequence-player :deep(picture) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1777,10 +1857,60 @@ export default {
   margin: 0;
 }
 
+.slide-figure--dual-sequence {
+  width: 100%;
+}
+
+.dual-sequence-grid {
+  display: flex;
+  flex-direction: row;
+  gap: clamp(8px, 2vw, 20px);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.dual-sequence-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.dual-sequence-col .image-sequence-player {
+  width: 100%;
+  min-height: 0;
+}
+
+.dual-sequence-col__label {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.88;
+  text-align: center;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .dual-sequence-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .project-detail-swiper :deep(.carousel-slide--image img),
 .project-detail-swiper :deep(.carousel-slide--image .slide-img),
 .project-detail-swiper :deep(.carousel-slide--image-sequence img),
-.project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
+.project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img),
+.project-detail-swiper :deep(.carousel-slide--dual-image-sequence img),
+.project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
   display: block;
   object-fit: contain;
   object-position: center !important;
@@ -1794,9 +1924,102 @@ export default {
   .project-detail-swiper :deep(.carousel-slide--image img),
   .project-detail-swiper :deep(.carousel-slide--image .slide-img),
   .project-detail-swiper :deep(.carousel-slide--image-sequence img),
-  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img) {
+  .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img),
+  .project-detail-swiper :deep(.carousel-slide--dual-image-sequence img),
+  .project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
     max-width: min(950px, 85vw);
     max-height: min(620px, 75vh);
+  }
+}
+
+/* Dos columnas: cada mitad limita el ancho para que quepan lado a lado */
+.project-detail-swiper
+  :deep(.carousel-slide--dual-image-sequence .dual-sequence-col img),
+.project-detail-swiper
+  :deep(.carousel-slide--dual-image-sequence .dual-sequence-col .slide-img) {
+  max-width: min(190px, 36vw);
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--dual-image-sequence .dual-sequence-col img),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence .dual-sequence-col .slide-img
+    ) {
+    max-width: min(460px, 42vw);
+    max-height: min(560px, 68vh);
+  }
+}
+
+/* Sidebar embebido: detalle grande; gráfico como miniatura */
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .dual-sequence-grid--sidebar
+      .dual-sequence-col--detalle
+      img
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .dual-sequence-grid--sidebar
+      .dual-sequence-col--detalle
+      .slide-img
+  ) {
+  max-width: min(400px, 74vw) !important;
+  max-height: min(300px, 48vh) !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .dual-sequence-grid--sidebar
+        .dual-sequence-col--detalle
+        img
+    ),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .dual-sequence-grid--sidebar
+        .dual-sequence-col--detalle
+        .slide-img
+    ) {
+    max-width: min(950px, 85vw) !important;
+    max-height: min(620px, 75vh) !important;
+  }
+}
+
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence .paired-sidebar__graphic--bottom img
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .paired-sidebar__graphic--bottom
+      .slide-img
+  ) {
+  max-width: min(200px, 46vw) !important;
+  max-height: min(140px, 24vh) !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        img
+    ),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        .slide-img
+    ) {
+    max-width: min(220px, 100%) !important;
+    max-height: min(170px, 28vh) !important;
   }
 }
 
