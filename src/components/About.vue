@@ -57,6 +57,8 @@
           <a
             class="about-cv-btn"
             href="/CV_Gonzalo_Coraglio.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
             download="CV_Gonzalo_Coraglio.pdf"
           >
             <svg
@@ -335,6 +337,9 @@ export default {
     0 4px 6px rgba(43, 43, 43, 0.08),
     0 14px 36px rgba(43, 43, 43, 0.14);
   transition: var(--transition);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .about-cv-icon {
