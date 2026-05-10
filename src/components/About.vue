@@ -54,13 +54,11 @@
       </div>
       <div class="about-skills">
         <div class="about-cv-wrap">
-          <a
+          <button
+            type="button"
             class="about-cv-btn"
-            href="/CV_Gonzalo_Coraglio.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            download="CV_Gonzalo_Coraglio.pdf"
-            @click="onCvClick"
+            aria-label="Descargar o compartir CV en PDF"
+            @click="openCvPdf"
           >
             <svg
               class="about-cv-icon"
@@ -79,7 +77,7 @@
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             <span>Descargar CV</span>
-          </a>
+          </button>
         </div>
         <h3 class="skills-title">Enfoque de Trabajo</h3>
         <div class="skills-grid">
@@ -149,42 +147,92 @@ export default {
 
     const aboutPortrait = '/Master plan/L2.png'
 
-    const CV_PDF = '/CV_Gonzalo_Coraglio.pdf'
     const CV_FILENAME = 'CV_Gonzalo_Coraglio.pdf'
 
-    /** iPhone / iPod / iPad (incl. iPadOS con UA de Mac + pantalla táctil). Safari suele mostrar PDF en pestaña nueva en negro; forzamos descarga vía blob. */
-    const isAppleTouchDevice = () => {
-      if (typeof navigator === 'undefined') return false
-      const ua = navigator.userAgent || ''
-      if (/iPhone|iPod/i.test(ua)) return true
-      if (/iPad/i.test(ua)) return true
-      if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
-      return false
+    /** URL absoluta del PDF (respeta `base` de Vite en GitHub Pages, etc.). */
+    const cvAbsoluteUrl = () => {
+      if (typeof window === 'undefined') return `/${CV_FILENAME}`
+      const base = import.meta.env.BASE_URL || '/'
+      const dir = new URL(base, `${window.location.origin}/`).href
+      return new URL(CV_FILENAME, dir).href
     }
 
-    const onCvClick = async (e) => {
-      if (!isAppleTouchDevice()) return
-      e.preventDefault()
+    /**
+     * Un solo flujo en todos los navegadores:
+     * 1) fetch del PDF (URL absoluta con base de Vite)
+     * 2) en táctil: Web Share (archivo o enlace) — evita visor PDF en negro en Safari
+     * 3) descarga forzada vía blob
+     * 4) abrir URL en pestaña nueva
+     */
+    const openCvPdf = async () => {
+      const absUrl = cvAbsoluteUrl()
+      const offerShare =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(pointer: coarse)')?.matches === true
+
+      let pdfBlob
       try {
-        const res = await fetch(CV_PDF, { credentials: 'same-origin' })
-        if (!res.ok) throw new Error(String(res.status))
-        const blob = await res.blob()
-        const pdfBlob =
-          blob.type === 'application/pdf'
-            ? blob
-            : new Blob([blob], { type: 'application/pdf' })
-        const url = URL.createObjectURL(pdfBlob)
+        const res = await fetch(absUrl, { cache: 'no-store', credentials: 'omit' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const raw = await res.blob()
+        pdfBlob =
+          raw.type === 'application/pdf'
+            ? raw
+            : new Blob([raw], { type: 'application/pdf' })
+      } catch {
+        window.open(absUrl, '_blank', 'noopener,noreferrer')
+        return
+      }
+
+      const nav = typeof navigator !== 'undefined' ? navigator : null
+
+      if (offerShare) {
+        try {
+          if (typeof File !== 'undefined' && nav?.share && typeof nav.canShare === 'function') {
+            let file
+            try {
+              file = new File([pdfBlob], CV_FILENAME, { type: 'application/pdf' })
+            } catch {
+              file = null
+            }
+            if (file) {
+              try {
+                if (nav.canShare({ files: [file] })) {
+                  await nav.share({ files: [file], title: 'CV — Gonzalo Coraglio' })
+                  return
+                }
+              } catch {
+                /* continuar */
+              }
+            }
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return
+        }
+
+        try {
+          if (nav?.share) {
+            await nav.share({ title: 'CV — Gonzalo Coraglio', url: absUrl })
+            return
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return
+        }
+      }
+
+      try {
+        const objectUrl = URL.createObjectURL(pdfBlob)
         const a = document.createElement('a')
-        a.href = url
+        a.href = objectUrl
         a.download = CV_FILENAME
         a.rel = 'noopener'
         a.style.display = 'none'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
-        window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
       } catch {
-        window.location.href = CV_PDF
+        window.open(absUrl, '_blank', 'noopener,noreferrer')
       }
     }
 
@@ -192,7 +240,7 @@ export default {
       stats,
       skills,
       aboutPortrait,
-      onCvClick
+      openCvPdf
     }
   }
 }
@@ -365,11 +413,12 @@ export default {
   gap: 0.65rem;
   min-width: min(100%, 19rem);
   padding: 1.15rem 2.35rem;
+  margin: 0;
   font-family: var(--font-display);
   font-size: 1.08rem;
   font-weight: 700;
   letter-spacing: 0.03em;
-  text-decoration: none;
+  text-align: center;
   color: var(--white);
   background: var(--primary-color);
   border: 2px solid var(--primary-color);
@@ -381,6 +430,8 @@ export default {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .about-cv-icon {
