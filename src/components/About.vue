@@ -53,6 +53,31 @@
         </div>
       </div>
       <div class="about-skills">
+        <div class="about-cv-wrap">
+          <a
+            class="about-cv-btn"
+            href="/CV_Gonzalo_Coraglio.pdf"
+            download="CV_Gonzalo_Coraglio.pdf"
+          >
+            <svg
+              class="about-cv-icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Descargar CV</span>
+          </a>
+        </div>
         <h3 class="skills-title">Enfoque de Trabajo</h3>
         <div class="skills-grid">
           <div class="skill-card" v-for="(skill, index) in skills" :key="index">
@@ -283,6 +308,55 @@ export default {
   margin-top: 6rem;
 }
 
+.about-cv-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 2.75rem 0 3.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.about-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: min(100%, 19rem);
+  padding: 1.15rem 2.35rem;
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  color: var(--white);
+  background: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 6px rgba(43, 43, 43, 0.08),
+    0 14px 36px rgba(43, 43, 43, 0.14);
+  transition: var(--transition);
+}
+
+.about-cv-icon {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.about-cv-btn:hover {
+  background: var(--color-ironclad);
+  border-color: var(--color-ironclad);
+  color: var(--white);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 16px rgba(43, 43, 43, 0.12),
+    0 22px 48px rgba(43, 43, 43, 0.18);
+}
+
+.about-cv-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 4px;
+}
+
 .skills-title {
   font-family: var(--font-sans);
   text-align: center;
@@ -367,6 +441,18 @@ export default {
 
   .skills-title {
     font-size: 1.65rem;
+  }
+
+  .about-cv-wrap {
+    padding: 2.25rem 0 2.75rem;
+  }
+
+  .about-cv-btn {
+    width: 100%;
+    max-width: 22rem;
+    min-width: 0;
+    padding: 1.05rem 1.5rem;
+    font-size: 1rem;
   }
 
   .about-stats {
