@@ -2502,7 +2502,7 @@ export default {
     height: auto !important;
     max-height: none !important;
     min-height: 0;
-    touch-action: pan-x pinch-zoom;
+    touch-action: pan-x pan-y pinch-zoom;
     transition: none;
   }
 
@@ -2560,7 +2560,7 @@ export default {
   .carousel-slide {
     height: auto !important;
     min-height: 0;
-    touch-action: pan-x pinch-zoom;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .carousel-slide-parallax-layer {
@@ -2571,7 +2571,7 @@ export default {
     width: 100%;
     min-height: 0;
     height: auto !important;
-    touch-action: pan-x pinch-zoom;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .carousel-slide--image,
@@ -2763,7 +2763,7 @@ export default {
     height: auto !important;
     max-height: none !important;
     flex: 0 0 auto;
-    touch-action: pan-x pinch-zoom;
+    touch-action: pan-x pan-y pinch-zoom;
     padding: 0.35rem 0.75rem 1rem;
     scrollbar-width: none;
     overscroll-behavior: auto;
