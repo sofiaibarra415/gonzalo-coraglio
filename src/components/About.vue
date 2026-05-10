@@ -60,6 +60,7 @@
             target="_blank"
             rel="noopener noreferrer"
             download="CV_Gonzalo_Coraglio.pdf"
+            @click="onCvClick"
           >
             <svg
               class="about-cv-icon"
@@ -148,10 +149,50 @@ export default {
 
     const aboutPortrait = '/Master plan/L2.png'
 
+    const CV_PDF = '/CV_Gonzalo_Coraglio.pdf'
+    const CV_FILENAME = 'CV_Gonzalo_Coraglio.pdf'
+
+    /** iPhone / iPod / iPad (incl. iPadOS con UA de Mac + pantalla táctil). Safari suele mostrar PDF en pestaña nueva en negro; forzamos descarga vía blob. */
+    const isAppleTouchDevice = () => {
+      if (typeof navigator === 'undefined') return false
+      const ua = navigator.userAgent || ''
+      if (/iPhone|iPod/i.test(ua)) return true
+      if (/iPad/i.test(ua)) return true
+      if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
+      return false
+    }
+
+    const onCvClick = async (e) => {
+      if (!isAppleTouchDevice()) return
+      e.preventDefault()
+      try {
+        const res = await fetch(CV_PDF, { credentials: 'same-origin' })
+        if (!res.ok) throw new Error(String(res.status))
+        const blob = await res.blob()
+        const pdfBlob =
+          blob.type === 'application/pdf'
+            ? blob
+            : new Blob([blob], { type: 'application/pdf' })
+        const url = URL.createObjectURL(pdfBlob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = CV_FILENAME
+        a.rel = 'noopener'
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
+      } catch {
+        window.location.href = CV_PDF
+      }
+    }
+
     return {
       stats,
       skills,
-      aboutPortrait
+      aboutPortrait,
+      onCvClick
     }
   }
 }
