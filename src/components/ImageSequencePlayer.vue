@@ -140,9 +140,10 @@ export default {
   justify-content: flex-start;
   width: 100%;
   opacity: 0;
-  transition: opacity 0.55s ease;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 0;
+  will-change: opacity;
 }
 
 .image-sequence-player__frame.is-active {

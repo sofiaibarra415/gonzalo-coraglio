@@ -183,7 +183,7 @@ export default {
   background: var(--secondary-color);
   color: var(--primary-color);
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 999px;
   font-weight: 500;
   transition: var(--transition);
   border: 2px solid transparent;

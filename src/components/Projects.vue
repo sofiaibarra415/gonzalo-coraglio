@@ -30,6 +30,7 @@
             :class="{ 'project-block-head--collapse': isPrimaryExpanded(index) }"
             @click="onHeadClick(index)"
           >
+            <ProjectLogoMark :glyph="project.logoGlyph" class="project-block-head__logo" />
             <h3 class="strip-title">{{ project.title }}</h3>
             <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
           </header>
@@ -45,6 +46,7 @@
               class="project-collapsed-layout"
             >
               <header class="project-block-head project-block-head--beside">
+                <ProjectLogoMark :glyph="project.logoGlyph" class="project-block-head__logo" />
                 <h3 class="strip-title">{{ project.title }}</h3>
                 <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
               </header>
@@ -71,7 +73,7 @@
 
             <Transition
               name="detail-reveal"
-              :duration="{ enter: 0, leave: 360 }"
+              :duration="{ enter: 0, leave: 260 }"
             >
               <div
                 v-show="hasExpandedDetail(index)"
@@ -97,6 +99,7 @@
                   :auto-height="swiperAutoHeight"
                   :grab-cursor="swiperGrabCursor"
                   :mousewheel="swiperMousewheel"
+                  :free-mode="swiperFreeMode"
                   :keyboard="{ enabled: true, onlyInViewport: false }"
                   role="region"
                   aria-roledescription="carrusel"
@@ -389,13 +392,14 @@
 <script>
 import { ref, watch, nextTick, onUnmounted, onMounted, computed } from 'vue'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Mousewheel, Keyboard, Pagination } from 'swiper/modules'
+import { Mousewheel, Keyboard, Pagination, FreeMode } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import { assetUrl } from '../utils/images'
 import OptimizedPicture from './OptimizedPicture.vue'
 import ImageSequencePlayer from './ImageSequencePlayer.vue'
 import PairedDualColumnsPlayer from './PairedDualColumnsPlayer.vue'
+import ProjectLogoMark from './ProjectLogoMark.vue'
 
 export default {
   name: 'Projects',
@@ -403,6 +407,7 @@ export default {
     OptimizedPicture,
     ImageSequencePlayer,
     PairedDualColumnsPlayer,
+    ProjectLogoMark,
     Swiper,
     SwiperSlide
   },
@@ -479,10 +484,21 @@ export default {
     }
 
     const swiperModules = computed(() => {
-      const mods = [Mousewheel, Keyboard]
+      const mods = [Mousewheel, Keyboard, FreeMode]
       if (isMobileProjects.value) mods.push(Pagination)
       return mods
     })
+
+    /**
+     * Desktop: el scroll (rueda/trackpad) mueve el carril de forma continua,
+     * como un rollo — sin "saltar" de slide en slide. Se frena donde el
+     * usuario suelta, con una leve inercia (momentum) al soltar.
+     */
+    const swiperFreeMode = computed(() =>
+      isMobileProjects.value
+        ? false
+        : { enabled: true, sticky: false, momentum: true, momentumBounce: false }
+    )
 
     /** Solo móvil: bullets debajo del carrusel */
     const swiperPagination = computed(() =>
@@ -553,30 +569,27 @@ export default {
       if (isPrimaryExpanded(index)) toggleExpand(index)
     }
 
-    /** Duración FLIP: la info extra del carrusel aparece al terminar; 2s equilibra fluidez y espera */
-    const FLIP_MS = 2000
-    const FLIP_EASE = 'cubic-bezier(0.18, 0.9, 0.22, 1)'
+    /** Duración FLIP: la info extra del carrusel aparece al terminar */
+    const FLIP_MS = 1100
+    const FLIP_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
     /**
-     * El elemento `el` está en `toRect`; lo mostramos como si estuviera en `fromRect` y animamos a su posición real.
-     * `onPlayStart` se llama en el mismo frame en que arranca la transición (útil para sincronizar timers).
+     * Aplica de inmediato (sin transición) la transformación que hace que `el`
+     * —ya ubicado en `toRect`— se vea como si estuviera en `fromRect`. Debe
+     * llamarse de forma síncrona, en el mismo tick que se mide `toRect`, para
+     * que el navegador nunca llegue a pintar el tamaño final sin transformar.
      */
-    const runFlip = (el, fromRect, toRect, onDone, onPlayStart) => {
-      const done = () => {
-        onDone?.()
-      }
-      if (prefersReducedMotion() || !el || !fromRect || !toRect) {
-        done()
-        return
-      }
+    const primeFlipTransform = (el, fromRect, toRect) => {
       if (
+        !el ||
+        !fromRect ||
+        !toRect ||
         fromRect.width < 2 ||
         fromRect.height < 2 ||
         toRect.width < 2 ||
         toRect.height < 2
       ) {
-        done()
-        return
+        return false
       }
 
       const dx = fromRect.left - toRect.left
@@ -589,7 +602,12 @@ export default {
       el.style.willChange = 'transform'
       el.style.transition = 'none'
       el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+      return true
+    }
 
+    /** Anima `el` (ya "primed") de vuelta a su posición real (`transform: none`). */
+    const playFlipTransform = (el, onDone) => {
+      const done = () => onDone?.()
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           el.style.setProperty(
@@ -598,7 +616,6 @@ export default {
             'important'
           )
           el.style.transform = 'none'
-          onPlayStart?.()
 
           const cleanup = () => {
             el.classList.remove('hero-flip-el')
@@ -627,6 +644,15 @@ export default {
       })
     }
 
+    /** FLIP completo (prime + play) sin fase intermedia; usado por el cierre. */
+    const runFlip = (el, fromRect, toRect, onDone) => {
+      if (prefersReducedMotion() || !primeFlipTransform(el, fromRect, toRect)) {
+        onDone?.()
+        return
+      }
+      playFlipTransform(el, onDone)
+    }
+
     const queryHeroToggle = (index) =>
       document.querySelector(
         `[data-project-idx="${index}"] .slide-figure--hero-toggle`
@@ -648,39 +674,94 @@ export default {
       })
     }
 
-    const runOpenFlip = (index, thumbRect, onDone) => {
-      if (!thumbRect || prefersReducedMotion() || isMobileViewport()) {
-        revealCarouselInfoForIndex(index)
-        onDone?.()
-        return
-      }
+    /**
+     * Encuentra el hero del carrusel recién expandido y lo "primea" (salto
+     * instantáneo a la posición/tamaño de la miniatura) de forma síncrona,
+     * antes de que se dispare cualquier scroll. Así la imagen nunca se ve en
+     * su tamaño final antes de tiempo (sin flash ni rebote).
+     * Resuelve con el elemento primado, o `null` si no se pudo animar.
+     */
+    const rectsMatch = (a, b) =>
+      Math.abs(a.left - b.left) < 1 &&
+      Math.abs(a.top - b.top) < 1 &&
+      Math.abs(a.width - b.width) < 1 &&
+      Math.abs(a.height - b.height) < 1
 
-      const tryOnce = (attempt = 0) => {
-        const heroEl = queryHeroToggle(index)
-        if (!heroEl) {
-          if (attempt < 24) requestAnimationFrame(() => tryOnce(attempt + 1))
-          else {
-            revealCarouselInfoForIndex(index)
-            onDone?.()
-          }
+    /**
+     * Centra el slide hero dentro del carril del carrusel con un margen fijo
+     * en píxeles (no `margin: auto`): así el centrado no depende de si el
+     * resto de los slides ya está montado ni de si el contenido total
+     * desborda el carril, y no se "corre" cuando luego se revela el resto.
+     */
+    const centerHeroSlide = (index, heroEl) => {
+      const sw = swiperInstances.value[index]
+      const slideEl = heroEl.closest('.swiper-slide')
+      const containerWidth = sw?.width || sw?.el?.getBoundingClientRect().width
+      if (!sw || !slideEl || !containerWidth) return
+      const slideWidth = slideEl.getBoundingClientRect().width
+      const margin = Math.max(0, (containerWidth - slideWidth) / 2)
+      slideEl.style.marginLeft = `${margin}px`
+      slideEl.style.marginRight = `${margin}px`
+      sw.update()
+    }
+
+    const primeOpenFlip = (index, thumbRect) =>
+      new Promise((resolve) => {
+        if (!thumbRect || prefersReducedMotion() || isMobileViewport()) {
+          resolve(null)
           return
         }
-        const heroRect = heroEl.getBoundingClientRect()
-        if (heroRect.width < 8 || heroRect.height < 8) {
-          if (attempt < 24) requestAnimationFrame(() => tryOnce(attempt + 1))
-          else {
-            revealCarouselInfoForIndex(index)
-            onDone?.()
+        let lastRect = null
+        const tryOnce = (attempt = 0) => {
+          swiperInstances.value[index]?.update()
+          const heroEl = queryHeroToggle(index)
+          if (heroEl) centerHeroSlide(index, heroEl)
+          const heroRect = heroEl?.getBoundingClientRect()
+          const tooSmall = !heroEl || !heroRect || heroRect.width < 8 || heroRect.height < 8
+          const stable = !tooSmall && lastRect && rectsMatch(lastRect, heroRect)
+          if (!tooSmall) lastRect = heroRect
+          if (stable) {
+            resolve(primeFlipTransform(heroEl, thumbRect, heroRect) ? heroEl : null)
+            return
           }
-          return
+          if (attempt < 24) {
+            requestAnimationFrame(() => tryOnce(attempt + 1))
+          } else if (!tooSmall) {
+            resolve(primeFlipTransform(heroEl, thumbRect, heroRect) ? heroEl : null)
+          } else {
+            resolve(null)
+          }
         }
+        tryOnce(0)
+      })
 
-        runFlip(heroEl, thumbRect, heroRect, () => {
+    /**
+     * Abre un proyecto: primero "primea" el FLIP (salto instantáneo, invisible
+     * al usuario) y recién ahí dispara, EN SIMULTÁNEO, el scroll de centrado
+     * y el crecimiento de la imagen — mismo reloj y misma curva, para que se
+     * lea como un solo movimiento continuo en vez de "scroll, pausa, zoom".
+     */
+    const openProjectWithFlip = (index, thumbRect, onDone) => {
+      primeOpenFlip(index, thumbRect).then((primedEl) => {
+        const reduced = prefersReducedMotion()
+        const scrollDone = animateScrollToViewportCenter(
+          index,
+          reduced ? 0 : FLIP_MS,
+          reduced ? undefined : FLIP_EASE_FN
+        )
+        const finish = () => {
           revealCarouselInfoForIndex(index)
           onDone?.()
+        }
+        const growDone = new Promise((resolve) => {
+          if (primedEl) {
+            playFlipTransform(primedEl, resolve)
+          } else {
+            resolve()
+          }
         })
-      }
-      requestAnimationFrame(() => tryOnce(0))
+        Promise.all([scrollDone, growDone]).then(finish)
+      })
     }
 
     const runCloseFlip = (index, heroRect, onDone) => {
@@ -691,13 +772,8 @@ export default {
 
       const tryOnce = (attempt = 0) => {
         const frame = queryThumbFrame(index)
-        if (!frame) {
-          if (attempt < 24) requestAnimationFrame(() => tryOnce(attempt + 1))
-          else onDone?.()
-          return
-        }
-        const thumbRect = frame.getBoundingClientRect()
-        if (thumbRect.width < 8 || thumbRect.height < 8) {
+        const thumbRect = frame?.getBoundingClientRect()
+        if (!frame || !thumbRect || thumbRect.width < 8 || thumbRect.height < 8) {
           if (attempt < 24) requestAnimationFrame(() => tryOnce(attempt + 1))
           else onDone?.()
           return
@@ -705,7 +781,7 @@ export default {
         runFlip(frame, heroRect, thumbRect, onDone)
       }
 
-      requestAnimationFrame(() => tryOnce(0))
+      tryOnce(0)
     }
 
     const LOREM =
@@ -736,6 +812,7 @@ export default {
     const projectsBase = [
       {
         slug: 'img-random',
+        logoGlyph: 'grid',
         title: 'IMG random — galería completa',
         category: 'Galería',
         location: '—',
@@ -761,6 +838,7 @@ export default {
       },
       {
         slug: 'master-plan',
+        logoGlyph: 'plan',
         title: 'Master plan — láminas',
         category: 'Planificación',
         location: 'Argentina',
@@ -798,6 +876,7 @@ export default {
       },
       {
         slug: 'mediateca',
+        logoGlyph: 'levels',
         title: 'Mediateca — imágenes y PDFs',
         category: 'Proyecto',
         location: 'Buenos Aires, Argentina',
@@ -877,6 +956,7 @@ export default {
       },
       {
         slug: 'centro-vacunatorio',
+        logoGlyph: 'cross',
         title: 'Centro vacunatorio',
         category: 'Proyecto',
         location: '—',
@@ -1064,46 +1144,74 @@ export default {
     const queryProjectArticle = (idx) =>
       document.querySelector(`[data-project-idx="${idx}"]`)
 
-    /** Centra el bloque del proyecto en el viewport (`block: 'center'`). */
-    const scrollProjectArticleToViewportCenter = (idx, behavior = 'auto') => {
-      if (typeof document === 'undefined') return
-      const el = queryProjectArticle(idx)
-      if (!el) return
-      el.scrollIntoView({
-        block: 'center',
-        inline: 'nearest',
-        behavior:
-          behavior === 'smooth' && !prefersReducedMotion() ? 'smooth' : 'auto'
+    /** Aproximación numérica de FLIP_EASE (cubic-bezier(0.22, 1, 0.36, 1)) para animar el scroll con el mismo reloj. */
+    const FLIP_EASE_FN = (t) => 1 - Math.pow(1 - t, 5)
+
+    /**
+     * Centra el bloque del proyecto en el viewport animando el scroll nosotros
+     * mismos (en vez de `scrollIntoView`), para poder correrlo en el mismo
+     * reloj y la misma curva que el crecimiento de la imagen — un solo
+     * movimiento continuo en vez de "scroll nativo, pausa, zoom".
+     */
+    const animateScrollToViewportCenter = (idx, durationMs, easingFn) =>
+      new Promise((resolve) => {
+        if (typeof window === 'undefined') {
+          resolve()
+          return
+        }
+        const el = queryProjectArticle(idx)
+        if (!el) {
+          resolve()
+          return
+        }
+        const rect = el.getBoundingClientRect()
+        const target =
+          window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2
+        const startY = window.scrollY
+        const delta = target - startY
+
+        if (!durationMs || Math.abs(delta) < 1) {
+          if (Math.abs(delta) >= 1) window.scrollTo(0, target)
+          resolve()
+          return
+        }
+
+        const start = performance.now()
+        const step = (now) => {
+          const t = Math.min(1, (now - start) / durationMs)
+          window.scrollTo(0, startY + delta * easingFn(t))
+          if (t < 1) {
+            requestAnimationFrame(step)
+          } else {
+            resolve()
+          }
+        }
+        requestAnimationFrame(step)
+      })
+
+    /** Tras el FLIP: recalcula el swiper una vez asentado el tamaño final. */
+    const settleSwiperAfterOpen = (index) => {
+      requestAnimationFrame(() => {
+        const sw = swiperInstances.value[index]
+        if (sw) {
+          sw.slideTo(0, 0)
+          sw.update()
+          window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
+        }
       })
     }
 
     /**
      * Escritorio: cada apertura centra el proyecto en el viewport (protagonista) y luego FLIP.
      */
-    const runDesktopOpenAfterExpand = (openIdx, fallbackThumbRect) => {
+    const runDesktopOpenAfterExpand = (openIdx, thumbRect) => {
       if (!prefersReducedMotion()) {
         heroFlippingIndex.value = openIdx
       }
       nextTick(() => {
-        /* auto: mismo frame que el FLIP; smooth desincronizaría el rect del thumb */
-        scrollProjectArticleToViewportCenter(openIdx, 'auto')
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const thumbEl = queryThumbFrame(openIdx)
-            const rect =
-              thumbEl?.getBoundingClientRect() ?? fallbackThumbRect
-            runOpenFlip(openIdx, rect, () => {
-              heroFlippingIndex.value = null
-            })
-            requestAnimationFrame(() => {
-              const sw = swiperInstances.value[openIdx]
-              if (sw) {
-                sw.slideTo(0, 0)
-                sw.update()
-                window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
-              }
-            })
-          })
+        openProjectWithFlip(openIdx, thumbRect, () => {
+          heroFlippingIndex.value = null
+          settleSwiperAfterOpen(openIdx)
         })
       })
     }
@@ -1124,22 +1232,9 @@ export default {
         }
         nextTick(() => {
           if (isMobileViewport()) {
-            scrollProjectArticleToViewportCenter(
-              index,
-              prefersReducedMotion() ? 'auto' : 'smooth'
-            )
-            requestAnimationFrame(() => {
-              runOpenFlip(index, thumbRect, () => {
-                heroFlippingIndex.value = null
-              })
-              requestAnimationFrame(() => {
-                const sw = swiperInstances.value[index]
-                if (sw) {
-                  sw.slideTo(0, 0)
-                  sw.update()
-                  window.setTimeout(() => sw.update(), CAROUSEL_EXPAND_MS + 250)
-                }
-              })
+            openProjectWithFlip(index, thumbRect, () => {
+              heroFlippingIndex.value = null
+              settleSwiperAfterOpen(index)
             })
             return
           }
@@ -1211,6 +1306,7 @@ export default {
       swiperAutoHeight,
       swiperGrabCursor,
       swiperMousewheel,
+      swiperFreeMode,
       onSwiperInit,
       onCarouselSlideChange,
       isMobileProjects,
@@ -1334,6 +1430,10 @@ export default {
   user-select: none;
 }
 
+.project-block-head__logo {
+  margin-bottom: 0.85rem;
+}
+
 .strip-title {
   font-family: var(--project-font);
   font-size: var(--project-main-title-size);
@@ -1363,10 +1463,10 @@ export default {
   --hero-w: 400px;
   --hero-h: 253px;
   --carousel-h: 260px;
-  --hero-expand-duration: 2s;
-  --hero-expand-ease: cubic-bezier(0.18, 0.9, 0.22, 1);
-  --hero-open-duration: 2s;
-  --hero-open-ease: cubic-bezier(0.18, 0.9, 0.22, 1);
+  --hero-expand-duration: 0.55s;
+  --hero-expand-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --hero-open-duration: 0.55s;
+  --hero-open-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .project-body.is-expanded {
@@ -1414,7 +1514,7 @@ export default {
 .project-collapsed-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: clamp(1rem, 3vw, 2.5rem);
   width: 100%;
 }
@@ -1426,7 +1526,6 @@ export default {
   padding: 0;
   max-width: min(380px, 38vw);
   text-align: right;
-  align-self: start;
 }
 
 .project-collapsed-spacer {
@@ -1510,7 +1609,7 @@ export default {
 .project-hero :deep(picture) {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -1550,14 +1649,14 @@ export default {
 @media (min-width: 769px) {
   .project-block {
     transition:
-      padding 0.82s cubic-bezier(0.45, 0, 0.55, 1),
-      padding-bottom 0.82s cubic-bezier(0.45, 0, 0.55, 1);
+      padding 0.42s cubic-bezier(0.65, 0, 0.35, 1),
+      padding-bottom 0.42s cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   .project-detail-outer--accordion-leave {
     pointer-events: none;
     overflow: hidden;
-    animation: project-detail-accordion-leave 0.82s cubic-bezier(0.45, 0, 0.55, 1)
+    animation: project-detail-accordion-leave 0.42s cubic-bezier(0.65, 0, 0.35, 1)
       forwards;
   }
 }
@@ -2485,7 +2584,7 @@ export default {
   gap: 0.5rem;
   margin-top: 1rem;
   padding: 0.65rem 1.1rem;
-  border-radius: 6px;
+  border-radius: 999px;
   background: var(--color-forest);
   color: var(--white) !important;
   text-decoration: none;
@@ -2709,7 +2808,7 @@ export default {
 }
 
 .detail-reveal-leave-active {
-  transition: opacity 0.36s ease;
+  transition: opacity 0.26s ease;
 }
 
 .detail-reveal-enter-from,

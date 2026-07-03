@@ -4,51 +4,49 @@
       <div class="about-content">
         <div class="about-text">
           <span class="section-label">Sobre Mí</span>
-          <h2 class="section-title">Arquitectura con visión</h2>
-          <div class="about-description">
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-              Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris 
-              nisi ut aliquip ex ea commodo consequat.
-            </p>
-            <p>
-              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum 
-              dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non 
-              proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-            <p>
-              Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium 
-              doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore 
-              veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-            </p>
-          </div>
-          <div class="about-stats">
-            <div class="stat-item" v-for="(stat, index) in stats" :key="index">
-              <div class="stat-number">{{ stat.number }}</div>
-              <div class="stat-label">{{ stat.label }}</div>
+          <h2 class="section-title section-title--display">
+            Arquitectura<br />con visión
+          </h2>
+          <p class="about-lede">
+            Cada proyecto nace de escuchar el lugar, el clima y a quienes lo van a
+            habitar. El resultado no es solo un edificio: es un espacio que se
+            siente propio desde el primer día.
+          </p>
+
+          <div class="about-stats-strip">
+            <div class="stat-chip" v-for="(stat, index) in stats" :key="index">
+              <span class="stat-chip-number">{{ stat.number }}</span>
+              <span class="stat-chip-label">{{ stat.label }}</span>
             </div>
           </div>
+
+          <a href="#proyectos" class="about-cta-pill">Ver proyectos</a>
         </div>
-        <div class="about-image">
-          <div class="image-wrapper">
+
+        <div class="about-collage" aria-hidden="true">
+          <div class="collage-item collage-item--a">
             <OptimizedPicture
-              :src="aboutPortrait"
-              alt="Gonzalo Coraglio"
-              img-class="about-portrait-img"
+              :src="collageImages[0]"
+              alt=""
+              img-class="collage-img"
               loading="lazy"
             />
-            <div class="image-overlay"></div>
           </div>
-          <div class="floating-card">
-            <div class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4z" />
-                <path d="M7 4V3a1 1 0 011-1h8a1 1 0 011 1v1M7 9l-2 2M17 9l2 2" />
-              </svg>
-            </div>
-            <h3>Premios y Reconocimientos</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <div class="collage-item collage-item--b">
+            <OptimizedPicture
+              :src="collageImages[1]"
+              alt=""
+              img-class="collage-img"
+              loading="lazy"
+            />
+          </div>
+          <div class="collage-item collage-item--c">
+            <OptimizedPicture
+              :src="collageImages[2]"
+              alt=""
+              img-class="collage-img"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
@@ -80,35 +78,24 @@
           </button>
         </div>
         <h3 class="skills-title">Enfoque de Trabajo</h3>
-        <div class="skills-grid">
-          <div class="skill-card" v-for="(skill, index) in skills" :key="index">
-            <div class="skill-icon" aria-hidden="true">
-              <!-- diseño -->
-              <svg v-if="index === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4" />
-                <path d="M9 9h.01M15 9h.01" />
-              </svg>
-              <!-- planificación -->
-              <svg v-else-if="index === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M3 9h18M9 21V9" />
-              </svg>
-              <!-- sostenibilidad -->
-              <svg v-else-if="index === 2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 22c-4-3-6-7-6-11a6 6 0 0112 0c0 4-2 8-6 11z" />
-                <path d="M12 22V12M8 12c0-4 3-7 4-9M16 12c0-4-3-7-4-9" />
-              </svg>
-              <!-- innovación -->
-              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 3v3M12 18v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M3 12h3M18 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
-                <circle cx="12" cy="12" r="4" />
-              </svg>
-            </div>
-            <h4>{{ skill.title }}</h4>
-            <p>{{ skill.description }}</p>
-          </div>
-        </div>
       </div>
+    </div>
+
+    <div class="skills-band">
+      <a
+        v-for="(skill, index) in skills"
+        :key="index"
+        href="#proyectos"
+        class="skill-panel"
+        :style="{ background: skill.bg }"
+      >
+        <span class="skill-panel-kicker">
+          <span class="skill-panel-dot" aria-hidden="true"></span>
+          {{ skill.kicker }}
+        </span>
+        <h4 class="skill-panel-title">{{ skill.title }}</h4>
+        <span class="skill-panel-cta">Ver proyectos</span>
+      </a>
     </div>
   </section>
 </template>
@@ -129,23 +116,31 @@ export default {
     const skills = [
       {
         title: 'Diseño Arquitectónico',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.'
+        kicker: 'cada detalle, con intención',
+        bg: '#3A362F'
       },
       {
         title: 'Planificación Urbana',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.'
+        kicker: 'pensado a escala de ciudad',
+        bg: '#2B333A'
       },
       {
         title: 'Sostenibilidad',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.'
+        kicker: 'materiales y energía con conciencia',
+        bg: '#2E3A33'
       },
       {
         title: 'Innovación',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor.'
+        kicker: 'tecnología al servicio del espacio',
+        bg: '#C1602C'
       }
     ]
 
-    const aboutPortrait = '/Master plan/L2.png'
+    const collageImages = [
+      '/Centro vacunatorio/RENDER_01.webp',
+      '/Mediateca/imagen 01 axo aerea_4 - Photo.webp',
+      '/Mediateca/imagen 01 axo aerea_2 - Photo.webp'
+    ]
 
     const CV_FILENAME = 'CV_Gonzalo_Coraglio.pdf'
 
@@ -239,7 +234,7 @@ export default {
     return {
       stats,
       skills,
-      aboutPortrait,
+      collageImages,
       openCvPdf
     }
   }
@@ -281,118 +276,115 @@ export default {
   margin-bottom: 2rem;
 }
 
-.about-description {
-  margin-bottom: 3rem;
+.section-title--display {
+  font-size: clamp(2.6rem, 4.4vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 1.75rem;
 }
 
-.about-description p {
-  margin-bottom: 1.5rem;
+.about-lede {
   color: var(--text-light);
-  line-height: 1.8;
-  font-size: 1.05rem;
-}
-
-.about-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 1.5rem;
-  background: var(--secondary-color);
-  border-radius: 8px;
-  transition: var(--transition);
-}
-
-.stat-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.stat-number {
-  font-family: var(--font-sans);
-  font-size: 2.35rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--accent-color);
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
-}
-
-.about-image {
-  position: relative;
-}
-
-.image-wrapper {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-.image-wrapper :deep(picture),
-.image-wrapper :deep(.about-portrait-img) {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(43, 43, 43, 0.06) 0%,
-    transparent 100%
-  );
-}
-
-.floating-card {
-  position: absolute;
-  bottom: -30px;
-  right: -30px;
-  background: var(--white);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  max-width: 280px;
-  z-index: 2;
-}
-
-.card-icon {
-  margin-bottom: 1rem;
-  color: var(--accent-color);
-}
-
-.card-icon svg {
-  width: 40px;
-  height: 40px;
-  display: block;
-}
-
-.floating-card h3 {
-  font-family: var(--font-sans);
+  line-height: 1.75;
   font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 0.5rem;
+  max-width: 32rem;
+  margin-bottom: 2.5rem;
+}
+
+.about-stats-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat-chip-number {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--primary-color);
 }
 
-.floating-card p {
+.stat-chip-label {
+  font-size: 0.82rem;
   color: var(--text-light);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.about-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.85rem;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-decoration: none;
+  border: 1.5px solid var(--primary-color);
+  border-radius: 999px;
+  transition: var(--transition);
+}
+
+.about-cta-pill:hover {
+  background: var(--primary-color);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.about-collage {
+  position: relative;
+  min-height: 30rem;
+}
+
+.collage-item {
+  position: absolute;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(43, 43, 43, 0.16);
+}
+
+.collage-item :deep(picture),
+.collage-item :deep(.collage-img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.collage-item :deep(.collage-img) {
+  object-fit: cover;
+}
+
+.collage-item--a {
+  top: 0;
+  right: 0;
+  width: 72%;
+  height: 20rem;
+  z-index: 1;
+}
+
+.collage-item--b {
+  top: 9.5rem;
+  left: 0;
+  width: 58%;
+  height: 14.5rem;
+  z-index: 2;
+}
+
+.collage-item--c {
+  bottom: 0;
+  right: 12%;
+  width: 44%;
+  height: 12.5rem;
+  z-index: 3;
 }
 
 .about-skills {
@@ -422,7 +414,7 @@ export default {
   color: var(--white);
   background: var(--primary-color);
   border: 2px solid var(--primary-color);
-  border-radius: 10px;
+  border-radius: 999px;
   box-shadow:
     0 4px 6px rgba(43, 43, 43, 0.08),
     0 14px 36px rgba(43, 43, 43, 0.14);
@@ -462,55 +454,82 @@ export default {
   letter-spacing: -0.02em;
   line-height: 1.25;
   color: var(--primary-color);
-  margin-bottom: 3rem;
+  margin-bottom: 0;
 }
 
-.skills-grid {
+/* Franja full-bleed: se sale del .container para ocupar todo el ancho de ventana */
+.skills-band {
+  margin-top: 3rem;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  height: 20rem;
 }
 
-.skill-card {
-  padding: 2.5rem;
-  background: var(--secondary-color);
-  border-radius: 12px;
-  text-align: center;
-  transition: var(--transition);
-  border: 2px solid transparent;
-}
-
-.skill-card:hover {
-  transform: translateY(-10px);
-  border-color: var(--accent-color);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-}
-
-.skill-icon {
-  margin-bottom: 1.5rem;
-  color: var(--accent-color);
+.skill-panel {
+  position: relative;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.75rem;
+  overflow: hidden;
+  text-decoration: none;
+  isolation: isolate;
+  transition: var(--transition);
 }
 
-.skill-icon svg {
-  width: 40px;
-  height: 40px;
+.skill-panel:hover {
+  filter: brightness(1.08);
 }
 
-.skill-card h4 {
-  font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 600;
+.skill-panel-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.01em;
+}
+
+.skill-panel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.skill-panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--primary-color);
-  margin-bottom: 1rem;
+  line-height: 1.25;
+  color: var(--white);
 }
 
-.skill-card p {
-  color: var(--text-light);
-  line-height: 1.7;
-  font-size: 0.95rem;
+.skill-panel-cta {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.75rem 1.35rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.skill-panel:hover .skill-panel-cta {
+  background: var(--white);
+  border-color: var(--white);
+  color: var(--color-charcoal);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 1024px) {
@@ -519,11 +538,18 @@ export default {
     gap: 3rem;
   }
 
-  .floating-card {
-    position: relative;
-    bottom: 0;
-    right: 0;
-    margin-top: 2rem;
+  .about-collage {
+    min-height: 26rem;
+    max-width: 32rem;
+  }
+
+  .skills-band {
+    grid-template-columns: repeat(2, 1fr);
+    height: auto;
+  }
+
+  .skill-panel {
+    height: 22rem;
   }
 }
 
@@ -552,13 +578,38 @@ export default {
     font-size: 1rem;
   }
 
-  .about-stats {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .about-stats-strip {
+    gap: 1.5rem;
   }
 
-  .skills-grid {
+  .about-collage {
+    min-height: 20rem;
+    max-width: 100%;
+  }
+
+  .collage-item--a {
+    height: 13rem;
+  }
+
+  .collage-item--b {
+    top: 8.5rem;
+    height: 9.5rem;
+  }
+
+  .collage-item--c {
+    height: 8rem;
+  }
+
+  .skills-band {
     grid-template-columns: 1fr;
+  }
+
+  .skill-panel {
+    height: 18rem;
+  }
+
+  .skill-panel-title {
+    font-size: 1.4rem;
   }
 }
 </style>
