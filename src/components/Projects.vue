@@ -30,7 +30,6 @@
             :class="{ 'project-block-head--collapse': isPrimaryExpanded(index) }"
             @click="onHeadClick(index)"
           >
-            <span class="strip-badge">{{ project.badge }}</span>
             <h3 class="strip-title">{{ project.title }}</h3>
             <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
           </header>
@@ -46,7 +45,6 @@
               class="project-collapsed-layout"
             >
               <header class="project-block-head project-block-head--beside">
-                <span class="strip-badge">{{ project.badge }}</span>
                 <h3 class="strip-title">{{ project.title }}</h3>
                 <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
               </header>
@@ -114,6 +112,9 @@
                       'carousel-slide--' + item.slide.type,
                       {
                         'carousel-slide--hero': item.slide.isHero,
+                        'carousel-slide--dual-with-side-text':
+                          item.slide.type === 'dual-image-sequence' &&
+                          item.slide.sideText,
                         'carousel-slide--sequence-tall':
                           (item.slide.type === 'image-sequence' &&
                             item.slide.sequenceTall) ||
@@ -160,6 +161,46 @@
                         />
                       </figure>
 
+                      <div
+                        v-else-if="
+                          item.slide.type === 'dual-image-sequence' &&
+                          item.slide.sideText
+                        "
+                        class="slide-dual-with-side-text"
+                      >
+                        <figure
+                          class="slide-figure slide-figure--dual-sequence slide-figure--dual-with-side-text"
+                        >
+                          <PairedDualColumnsPlayer
+                            v-if="item.slide.variant === 'sync-pairs'"
+                            :pairs="item.slide.pairs"
+                            :left-label="item.slide.leftLabel"
+                            :right-label="item.slide.rightLabel"
+                            alt-left="Detalle constructivo"
+                            alt-right="Gráfico"
+                            :interval-ms="2000"
+                            :graphic-mini-left-align-bottom="
+                              item.slide.graphicMiniLeftAlignBottom
+                            "
+                          />
+                        </figure>
+                        <div class="slide-text-inner slide-text-inner--beside">
+                          <h4
+                            v-if="item.slide.sideText.heading"
+                            class="detail-heading detail-heading--v1"
+                          >
+                            {{ item.slide.sideText.heading }}
+                          </h4>
+                          <p
+                            v-for="(para, pii) in item.slide.sideText.paragraphs"
+                            :key="pii"
+                            class="detail-para"
+                          >
+                            {{ para }}
+                          </p>
+                        </div>
+                      </div>
+
                       <figure
                         v-else-if="item.slide.type === 'dual-image-sequence'"
                         class="slide-figure slide-figure--dual-sequence"
@@ -169,7 +210,7 @@
                           :pairs="item.slide.pairs"
                           :left-label="item.slide.leftLabel"
                           :right-label="item.slide.rightLabel"
-                          alt-left="Detalle"
+                          alt-left="Detalle constructivo"
                           alt-right="Gráfico"
                           :interval-ms="2000"
                           :graphic-mini-left-align-bottom="
@@ -186,12 +227,12 @@
                             :key="dci"
                             class="dual-sequence-col"
                           >
-                            <p
+                            <h4
                               v-if="col.label"
-                              class="dual-sequence-col__label"
+                              class="detail-heading detail-heading--v1 dual-sequence-col__label"
                             >
                               {{ col.label }}
-                            </p>
+                            </h4>
                             <ImageSequencePlayer
                               :images="col.images"
                               :alt-base="col.altBase || 'Vista'"
@@ -215,7 +256,11 @@
                         <h4
                           v-if="item.slide.heading"
                           class="detail-heading"
-                          :class="'detail-heading--v' + (item.origIndex % 4)"
+                          :class="
+                            item.slide.isSideTextSplit
+                              ? 'detail-heading--v1'
+                              : 'detail-heading--v' + (item.origIndex % 4)
+                          "
                         >
                           {{ item.slide.heading }}
                         </h4>
@@ -377,8 +422,27 @@ export default {
       expandedIds.value.includes(index) ||
       leavingExpandedIndex.value === index
 
+    const expandSideTextSlidesForMobile = (slides) => {
+      if (!isMobileProjects.value) return slides
+      return slides.flatMap((slide) => {
+        if (slide.type === 'dual-image-sequence' && slide.sideText) {
+          const { sideText, ...dualOnly } = slide
+          return [
+            dualOnly,
+            {
+              type: 'text',
+              heading: sideText.heading,
+              paragraphs: sideText.paragraphs,
+              isSideTextSplit: true
+            }
+          ]
+        }
+        return [slide]
+      })
+    }
+
     const visibleSlidesForProject = (project, index) => {
-      const slides = project.carouselSlides
+      const slides = expandSideTextSlidesForMobile(project.carouselSlides)
       const mapWithIndex = (arr) =>
         arr.map((slide, origIndex) => ({ slide, origIndex }))
       if (!hasExpandedDetail(index)) return mapWithIndex(slides)
@@ -431,7 +495,7 @@ export default {
 
     /* Desktop: aire entre slides. Móvil: 0 para que cada slide sea 100% del carril (sin ancho tipo max-content). */
     const swiperSpaceBetween = computed(() =>
-      isMobileProjects.value ? 0 : 64
+      isMobileProjects.value ? 0 : 10
     )
 
     /** Falso: el alto lo fija CSS (--carousel-h); así los slides de texto miden lo mismo que las imágenes y el texto puede centrarse en vertical */
@@ -649,11 +713,30 @@ export default {
     const LOREM2 =
       'Segundo párrafo de demostración. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
 
+    const DETALLE_REFERENCIAS = `1 - Tierra natural
+2 - Suelo compactado
+3 - Aislante hidrófugo
+4 - H.H.R.P.
+5 - Barrera de vapor
+6 - Contrapiso
+7 - Carpeta
+8 - Piso flotante de madera + manto de polietileno
+9 - Fenólico
+10 - Aislante acústico
+11 - Aislante térmico
+12 - Placa Durlock
+13 - Cielo raso
+14 - Piso de granito
+15 - Columna de H°A°
+16 - DVH 3+3/9/4
+17 - Marco de aluminio anodizado
+18 - Vidrio laminado 4+4
+19 - Leca / piedra partida`
+
     const projectsBase = [
       {
         slug: 'img-random',
         title: 'IMG random — galería completa',
-        badge: 'Carpeta',
         category: 'Galería',
         location: '—',
         year: '2024',
@@ -679,7 +762,6 @@ export default {
       {
         slug: 'master-plan',
         title: 'Master plan — láminas',
-        badge: 'Carpeta',
         category: 'Planificación',
         location: 'Argentina',
         year: '2024',
@@ -717,7 +799,6 @@ export default {
       {
         slug: 'mediateca',
         title: 'Mediateca — imágenes y PDFs',
-        badge: 'Carpeta',
         category: 'Proyecto',
         location: 'Buenos Aires, Argentina',
         year: '2024',
@@ -761,17 +842,19 @@ export default {
               '/Mediateca/Plantas y corte/Nivel 6 png.png',
               '/Mediateca/Plantas y corte/Corte A.png'
             ],
-            kicker: 'Plantas y corte',
-            heading: 'Recorrido de planos y sección',
+            skipText: true
+          },
+          {
+            heading: 'Detalle constructivo',
             paragraphs: [
-              'Las imágenes alternan en el mismo encuadre, como una animación de revisión del conjunto de láminas.'
+              'Detalle 0 se muestra junto al gráfico del detalle 0; Detalle 1 junto al gráfico del detalle 1. Las dos columnas cambian al unísono cada dos segundos.'
             ]
           },
           {
             dualImageCarousel: {
               syncPairs: true,
               graphicMiniLeftAlignBottom: true,
-              leftLabel: 'Detalle',
+              leftLabel: 'Detalle constructivo',
               rightLabel: '',
               pairs: [
                 {
@@ -786,11 +869,32 @@ export default {
                 }
               ]
             },
-            kicker: 'Detalle',
-            heading: 'Dos lecturas en paralelo',
-            paragraphs: [
-              'Detalle 0 se muestra junto al gráfico del detalle 0; Detalle 1 junto al gráfico del detalle 1. Las dos columnas cambian al unísono cada dos segundos.'
-            ]
+            heading: 'Referencias',
+            paragraphs: [DETALLE_REFERENCIAS],
+            sideTextRight: true
+          }
+        ]
+      },
+      {
+        slug: 'centro-vacunatorio',
+        title: 'Centro vacunatorio',
+        category: 'Proyecto',
+        location: '—',
+        year: '2024',
+        area: '—',
+        uniformImages: false,
+        pdfs: null,
+        heroImage: '/Centro vacunatorio/RENDER_01.png',
+        carouselPanels: [
+          {
+            image: '/Centro vacunatorio/RENDER_01.png',
+            kicker: 'Render',
+            heading: 'Vista exterior',
+            skipText: true
+          },
+          {
+            image: '/Centro vacunatorio/detalle.png',
+            heading: 'Detalle constructivo'
           }
         ]
       }
@@ -815,7 +919,16 @@ export default {
             rightLabel: panel.dualImageCarousel.rightLabel || '',
             sequenceTall: panel.imageCarouselTall === true,
             graphicMiniLeftAlignBottom:
-              !!panel.dualImageCarousel.graphicMiniLeftAlignBottom
+              !!panel.dualImageCarousel.graphicMiniLeftAlignBottom,
+            ...(panel.sideTextRight &&
+            (panel.heading || (panel.paragraphs && panel.paragraphs.length))
+              ? {
+                  sideText: {
+                    heading: panel.heading || '',
+                    paragraphs: panel.paragraphs || []
+                  }
+                }
+              : {})
           })
         } else if (panel.dualImageCarousel?.columns?.length >= 2) {
           const cols = panel.dualImageCarousel.columns.slice(0, 2).map((col) => ({
@@ -862,12 +975,20 @@ export default {
           })
           continue
         }
-        out.push({
-          type: 'text',
-          kicker: panel.kicker,
-          heading: panel.heading,
-          paragraphs: panel.paragraphs || []
-        })
+        if (
+          !panel.skipText &&
+          !panel.sideTextRight &&
+          (panel.kicker ||
+            panel.heading ||
+            (panel.paragraphs && panel.paragraphs.length))
+        ) {
+          out.push({
+            type: 'text',
+            kicker: panel.kicker,
+            heading: panel.heading,
+            paragraphs: panel.paragraphs || []
+          })
+        }
       }
       if (p.pdfs && p.pdfs.length) {
         out.push({ type: 'docs' })
@@ -1103,6 +1224,38 @@ export default {
 .projects {
   padding: 6rem 0;
   background: transparent;
+  --project-font: var(--font-display);
+  --project-text-size: 12px;
+  --project-main-title-size: 20px;
+  --project-title-size: 16px;
+  --project-line-height: normal;
+}
+
+/* Sin line-height custom: solo normal en toda la tipografía de proyectos */
+.projects :is(
+  .section-label,
+  .section-title,
+  .section-subtitle,
+  .strip-title,
+  .strip-meta,
+  .detail-kicker,
+  .detail-heading,
+  .detail-para,
+  .detail-label,
+  .detail-row,
+  .pdf-link,
+  .pdf-open-button,
+  .slide-text-inner,
+  .dual-sequence-col__label
+) {
+  line-height: normal;
+  text-transform: none;
+}
+
+.projects :deep(.slide-text-inner),
+.projects :deep(.dual-sequence-col__label) {
+  line-height: normal;
+  text-transform: none;
 }
 
 .section-header {
@@ -1114,29 +1267,31 @@ export default {
 
 .section-label {
   display: inline-block;
-  font-family: var(--font-sans);
+  font-family: var(--project-font);
   color: var(--text-muted);
   font-weight: 500;
-  font-size: 0.72rem;
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   letter-spacing: 0.14em;
-  text-transform: uppercase;
+  text-transform: none;
   margin-bottom: 0.65rem;
 }
 
 .section-title {
-  font-family: var(--font-display);
-  font-size: 2.35rem;
+  font-family: var(--project-font);
+  font-size: var(--project-main-title-size);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: var(--project-line-height);
   color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .section-subtitle {
+  font-family: var(--project-font);
   color: var(--text-light);
-  font-size: 1.05rem;
-  line-height: 1.75;
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
 }
 
 .projects-stack-wrap {
@@ -1179,30 +1334,22 @@ export default {
   user-select: none;
 }
 
-.strip-badge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-light);
-  display: block;
-  margin-bottom: 0.35rem;
-}
-
 .strip-title {
-  font-family: var(--font-display);
-  font-size: 0.98rem;
+  font-family: var(--project-font);
+  font-size: var(--project-main-title-size);
   font-weight: 500;
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--text-dark);
   margin: 0 0 0.35rem;
-  line-height: 1.35;
+  line-height: var(--project-line-height);
 }
 
 .strip-meta {
   margin: 0;
-  font-size: 0.8rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   color: var(--text-light);
   letter-spacing: 0.03em;
 }
@@ -1212,6 +1359,7 @@ export default {
   max-width: 1680px;
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
+  --project-img-radius: 12px;
   --hero-w: 400px;
   --hero-h: 253px;
   --carousel-h: 260px;
@@ -1266,7 +1414,7 @@ export default {
 .project-collapsed-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: clamp(1rem, 3vw, 2.5rem);
   width: 100%;
 }
@@ -1278,7 +1426,7 @@ export default {
   padding: 0;
   max-width: min(380px, 38vw);
   text-align: right;
-  align-self: center;
+  align-self: start;
 }
 
 .project-collapsed-spacer {
@@ -1330,7 +1478,7 @@ export default {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: center;
+  object-position: top center;
 }
 
 .project-hero {
@@ -1345,7 +1493,7 @@ export default {
 }
 
 .project-hero-frame {
-  border-radius: 4px;
+  border-radius: var(--project-img-radius);
   overflow: hidden; /* el img va contenido dentro; no recortar con cover */
   background: transparent;
   transition:
@@ -1355,14 +1503,14 @@ export default {
     max-width var(--hero-expand-duration) var(--hero-expand-ease),
     max-height var(--hero-expand-duration) var(--hero-expand-ease);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .project-hero :deep(picture) {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -1380,7 +1528,8 @@ export default {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: center;
+  object-position: top center;
+  border-radius: var(--project-img-radius);
   transition:
     max-height var(--hero-expand-duration) var(--hero-expand-ease),
     max-width var(--hero-expand-duration) var(--hero-expand-ease);
@@ -1460,6 +1609,23 @@ export default {
     max-height var(--hero-expand-duration) var(--hero-expand-ease);
 }
 
+.project-detail-swiper :deep(.paired-dual-columns-player),
+.project-detail-swiper :deep(.image-sequence-player) {
+  align-self: flex-start;
+  width: 100%;
+}
+
+.project-detail-swiper :deep(.paired-dual-columns-player__stack),
+.project-detail-swiper :deep(.image-sequence-player__stack) {
+  place-items: start;
+}
+
+.project-detail-swiper :deep(.paired-dual-columns-player__frame),
+.project-detail-swiper :deep(.image-sequence-player__frame) {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
 .carousel-slide-parallax-layer {
   box-sizing: border-box;
   width: 100%;
@@ -1467,15 +1633,15 @@ export default {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .carousel-slide--text .carousel-slide-parallax-layer,
 .carousel-slide--docs .carousel-slide-parallax-layer,
 .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .project-detail-swiper :deep(.swiper) {
@@ -1525,13 +1691,13 @@ export default {
     height: 100% !important;
   }
 
-  /* Centrado vertical real del bloque de texto dentro del slide */
+  /* Alineación superior del bloque de texto dentro del slide */
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: stretch !important;
   }
 
@@ -1540,15 +1706,15 @@ export default {
   .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
     flex: 1 1 auto;
     min-height: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
   }
 
   .carousel-slide--text .slide-text-inner,
   .carousel-slide--docs .slide-text-inner,
   .carousel-slide--pdf-slide .slide-text-inner {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin-top: 0;
+    margin-bottom: 0;
     flex-shrink: 0;
     align-self: stretch;
     width: 100%;
@@ -1599,6 +1765,13 @@ export default {
     flex-shrink: 0;
   }
 
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--dual-with-side-text:not(.carousel-slide--hero)) {
+    width: max-content !important;
+    max-width: min(96vw, 1440px) !important;
+    flex-shrink: 0;
+  }
+
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
     width: auto;
     max-width: min(85vw, 750px);
@@ -1630,8 +1803,15 @@ export default {
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)),
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)) {
+    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)),
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--dual-with-side-text:not(.carousel-slide--hero)) {
     max-width: min(90vw, 960px) !important;
+  }
+
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--dual-with-side-text:not(.carousel-slide--hero)) {
+    max-width: min(96vw, 1440px) !important;
   }
 
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
@@ -1688,6 +1868,7 @@ export default {
     ) {
     max-width: min(240px, 100%) !important;
     max-height: min(180px, 30vh) !important;
+    object-position: bottom center !important;
   }
 
   .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
@@ -1700,10 +1881,11 @@ export default {
   }
 
   .project-detail-swiper :deep(.slide-text-inner) {
-    font-size: 0.9375rem;
-    line-height: 1.55;
+    font-family: var(--project-font);
+    font-size: var(--project-text-size);
+    line-height: var(--project-line-height);
     letter-spacing: 0.01em;
-    padding: 0.5rem clamp(1rem, 2vw, 1.75rem) 1.1rem;
+    padding: 0 clamp(1rem, 2vw, 1.75rem) 1.1rem;
   }
 
   .project-detail-swiper :deep(.slide-text-inner p) {
@@ -1787,7 +1969,7 @@ export default {
 .carousel-slide--image-sequence,
 .carousel-slide--dual-image-sequence {
   background: transparent;
-  border-radius: 0;
+  border-radius: var(--project-img-radius);
   overflow: hidden;
   border: none;
 }
@@ -1797,8 +1979,8 @@ export default {
   height: 100%;
   min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 /* Imágenes del carrusel: siempre alto = 100% del carrusel (misma lectura que el hero) */
@@ -1812,8 +1994,8 @@ export default {
   max-height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   margin: 0;
 }
 
@@ -1822,8 +2004,8 @@ export default {
 .carousel-slide--image-sequence .image-sequence-player :deep(picture),
 .carousel-slide--dual-image-sequence .image-sequence-player :deep(picture) {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   height: 100%;
   max-height: 100%;
   width: max-content;
@@ -1835,6 +2017,61 @@ export default {
 
 .slide-figure--dual-sequence {
   width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.slide-dual-with-side-text {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: clamp(10px, 2vw, 22px);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.slide-figure--dual-with-side-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  max-height: 100%;
+  margin: 0;
+}
+
+.slide-text-inner--beside {
+  flex: 0 0 min(420px, 44vw);
+  width: min(480px, 48vw);
+  max-width: min(560px, 52vw);
+  align-self: flex-start;
+  overflow-y: auto;
+  max-height: 100%;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .slide-dual-with-side-text {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .slide-text-inner--beside {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .slide-figure--dual-sequence
+      .paired-dual-columns-player--sidebar
+  ) {
+  height: 100%;
+  min-height: 0;
 }
 
 .dual-sequence-grid {
@@ -1844,8 +2081,8 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 0;
-  align-items: stretch;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   box-sizing: border-box;
 }
 
@@ -1854,8 +2091,8 @@ export default {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 0.35rem;
 }
 
@@ -1865,13 +2102,20 @@ export default {
 }
 
 .dual-sequence-col__label {
-  margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.88;
-  text-align: center;
+  margin: 0 0 0.65rem;
+  text-align: left;
   max-width: 100%;
+}
+
+.project-detail-swiper :deep(.dual-sequence-col__label.detail-heading) {
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: var(--project-line-height);
+  color: var(--text-light);
+  font-style: normal;
 }
 
 @media (max-width: 768px) {
@@ -1879,6 +2123,24 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Gráfico mini: tamaño chico, anclado abajo sin recorte */
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .dual-sequence-col--graphic-mini
+      img
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .dual-sequence-col--graphic-mini
+      .slide-img
+  ) {
+  max-height: min(130px, 22vh) !important;
+  max-width: min(200px, 46vw) !important;
+  object-position: bottom center !important;
 }
 
 .project-detail-swiper :deep(.carousel-slide--image img),
@@ -1889,11 +2151,12 @@ export default {
 .project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
   display: block;
   object-fit: contain;
-  object-position: center !important;
+  object-position: top center !important;
   width: auto;
   height: auto;
   max-width: min(400px, 74vw);
   max-height: min(300px, 48vh);
+  border-radius: var(--project-img-radius);
 }
 
 @media (min-width: 769px) {
@@ -1976,9 +2239,58 @@ export default {
     .carousel-slide--dual-image-sequence
       .paired-sidebar__graphic--bottom
       .slide-img
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .paired-sidebar__graphic--bottom
+      .slide-img--graphic-thumb
   ) {
   max-width: min(200px, 46vw) !important;
   max-height: min(140px, 24vh) !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: bottom center !important;
+}
+
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .paired-sidebar__graphic--bottom
+      .paired-dual-columns-player__stack
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .paired-sidebar__graphic--bottom
+      .paired-dual-columns-player__frame
+  ) {
+  width: fit-content !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence .dual-sequence-col--graphic-mini
+  ),
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence .paired-sidebar__graphic--bottom
+  ) {
+  overflow: visible !important;
+}
+
+.project-detail-swiper
+  :deep(
+    .carousel-slide--dual-image-sequence
+      .paired-sidebar__graphic--bottom
+      picture
+  ) {
+  display: block;
+  width: auto !important;
+  max-width: min(200px, 46vw) !important;
 }
 
 @media (min-width: 769px) {
@@ -1993,9 +2305,16 @@ export default {
       .carousel-slide--dual-image-sequence
         .paired-sidebar__graphic--bottom
         .slide-img
+    ),
+  .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        .slide-img--graphic-thumb
     ) {
     max-width: min(220px, 100%) !important;
     max-height: min(170px, 28vh) !important;
+    object-position: bottom center !important;
   }
 }
 
@@ -2084,8 +2403,8 @@ export default {
 
 .slide-figure :deep(picture) {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -2118,17 +2437,28 @@ export default {
   overflow-x: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 0.35rem 0.5rem 0.85rem 0;
+  padding: 0 0.5rem 0.85rem 0;
   box-sizing: border-box;
   background: transparent;
   scrollbar-width: thin;
   scrollbar-color: rgba(43, 43, 43, 0.35) transparent;
-  align-self: center;
+  align-self: flex-start;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
+}
+
+.project-detail-swiper :deep(.slide-text-inner) {
+  padding-top: 0;
 }
 
 @media (min-width: 769px) {
   .slide-text-inner {
-    padding: 0.6rem clamp(1.25rem, 2.5vw, 2.25rem) 1.1rem clamp(1.25rem, 2.5vw, 2.25rem);
+    padding: 0 clamp(1.25rem, 2.5vw, 2.25rem) 1.1rem clamp(1.25rem, 2.5vw, 2.25rem);
+  }
+
+  .project-detail-swiper :deep(.slide-text-inner) {
+    padding-top: 0;
   }
 }
 
@@ -2159,8 +2489,10 @@ export default {
   background: var(--color-forest);
   color: var(--white) !important;
   text-decoration: none;
+  font-family: var(--project-font);
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   transition: filter 0.2s ease, transform 0.15s ease, background 0.2s ease;
 }
 
@@ -2178,24 +2510,25 @@ export default {
 
 .detail-kicker {
   margin: 0 0 0.4rem;
-  font-family: var(--font-sans);
+  font-family: var(--project-font);
   font-weight: 500;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 0.62rem;
+  text-transform: none;
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   color: var(--text-muted);
 }
 
 .detail-kicker--v0 {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
   letter-spacing: 0.12em;
   color: var(--text-muted);
 }
 
 .detail-kicker--v1 {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
   font-style: normal;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -2204,53 +2537,58 @@ export default {
 }
 
 .detail-kicker--v2 {
-  font-family: var(--font-sans);
-  font-size: 0.65rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
   letter-spacing: 0.1em;
   color: var(--text-muted);
 }
 
 .detail-kicker--v3 {
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
   font-weight: 500;
   letter-spacing: 0.08em;
   color: var(--text-light);
 }
 
 .detail-heading {
-  font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
   font-weight: 500;
   font-style: normal;
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--primary-color);
   margin: 0 0 0.65rem;
-  line-height: 1.4;
+  line-height: var(--project-line-height);
 }
 
 .detail-heading--v0 {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--primary-color);
 }
 
 .detail-heading--v1 {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  line-height: 1.4;
+  line-height: var(--project-line-height);
   color: var(--text-light);
 }
 
+.projects .detail-heading.detail-heading--v1,
+.projects :deep(.detail-heading.detail-heading--v1) {
+  text-transform: uppercase;
+}
+
 .detail-heading--v2 {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
   font-weight: 500;
   font-style: normal;
   letter-spacing: 0;
@@ -2258,8 +2596,8 @@ export default {
 }
 
 .detail-heading--v3 {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  font-family: var(--project-font);
+  font-size: var(--project-title-size);
   font-weight: 500;
   font-style: normal;
   letter-spacing: 0.01em;
@@ -2268,27 +2606,29 @@ export default {
 
 .detail-para {
   margin: 0 0 0.75rem;
-  font-size: 0.95rem;
-  line-height: 1.78;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   color: var(--text-dark);
+  white-space: pre-line;
 }
 
 /* Ritmo al deslizar: tres tonos/tamaños que se repiten */
 .detail-para--tone-0 {
-  font-size: 1rem;
+  font-size: var(--project-text-size);
   color: var(--color-deep);
   font-weight: 400;
 }
 
 .detail-para--tone-1 {
-  font-size: 0.88rem;
+  font-size: var(--project-text-size);
   color: var(--color-slate);
-  line-height: 1.85;
+  line-height: var(--project-line-height);
   font-weight: 400;
 }
 
 .detail-para--tone-2 {
-  font-size: 1.05rem;
+  font-size: var(--project-text-size);
   color: var(--color-forest);
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -2314,7 +2654,9 @@ export default {
   gap: 0.45rem;
   color: var(--accent-color);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   font-weight: 500;
   transition: var(--transition);
 }
@@ -2342,7 +2684,9 @@ export default {
   display: grid;
   grid-template-columns: 100px 1fr;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-family: var(--project-font);
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   color: var(--text-dark);
 }
 
@@ -2351,10 +2695,12 @@ export default {
 }
 
 .detail-label {
+  font-family: var(--project-font);
   font-weight: 600;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-size: 0.7rem;
+  text-transform: none;
+  font-size: var(--project-text-size);
+  line-height: var(--project-line-height);
   color: var(--text-light);
 }
 
@@ -2381,7 +2727,7 @@ export default {
   }
 
   .section-title {
-    font-size: 1.85rem;
+    font-size: var(--project-main-title-size);
   }
 
   .project-block {
@@ -2435,7 +2781,7 @@ export default {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    object-position: center;
+    object-position: top center;
   }
 
   /* Móvil: franja baja para no dominar la pantalla */
@@ -2529,8 +2875,8 @@ export default {
   .project-detail-swiper :deep(.carousel-slide--docs .slide-text-inner),
   .project-detail-swiper :deep(.carousel-slide--pdf-slide .slide-text-inner) {
     max-width: 450px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .carousel-slide {
@@ -2587,6 +2933,53 @@ export default {
     box-sizing: border-box;
   }
 
+  .carousel-slide--dual-image-sequence
+    .paired-sidebar__graphic--bottom
+    .paired-dual-columns-player
+    :deep(picture) {
+    width: auto !important;
+    max-width: min(120px, 32vw) !important;
+    max-height: min(130px, 22vh) !important;
+  }
+
+  .carousel-slide--dual-image-sequence
+    .paired-sidebar__graphic--bottom
+    .paired-dual-columns-player
+    :deep(.paired-dual-columns-player__stack),
+  .carousel-slide--dual-image-sequence
+    .paired-sidebar__graphic--bottom
+    .paired-dual-columns-player
+    :deep(.paired-dual-columns-player__frame) {
+    width: fit-content !important;
+    max-width: 100% !important;
+  }
+
+  .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-grid--sidebar.dual-sequence-grid--graphic-left) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-col--detalle) {
+    order: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-col--graphic-mini) {
+    order: 2;
+    justify-content: flex-end !important;
+    align-self: stretch !important;
+  }
+
   .carousel-slide--image-sequence .image-sequence-player,
   .carousel-slide--dual-image-sequence .paired-dual-columns-player {
     width: 100% !important;
@@ -2621,7 +3014,7 @@ export default {
     height: auto !important;
     max-height: min(340px, 46dvh) !important;
     object-fit: contain !important;
-    object-position: center !important;
+    object-position: top center !important;
   }
 
   /* contain + max ancho/alto: evita recortes (width:100% forzaba escala mala con alto fijo) */
@@ -2634,9 +3027,9 @@ export default {
     height: auto !important;
     max-height: var(--carousel-h) !important;
     object-fit: contain !important;
-    object-position: center !important;
-    margin-left: auto;
-    margin-right: auto;
+    object-position: top center !important;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .project-body.is-expanded
@@ -2650,9 +3043,9 @@ export default {
     height: auto !important;
     max-height: min(calc(var(--carousel-h) * 0.68), 52dvh) !important;
     object-fit: contain !important;
-    object-position: center !important;
-    margin-left: auto;
-    margin-right: auto;
+    object-position: top center !important;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .project-body.is-expanded
@@ -2666,15 +3059,22 @@ export default {
       .carousel-slide--dual-image-sequence
         .paired-sidebar__graphic--bottom
         .slide-img
+    ),
+  .project-body.is-expanded
+    .project-detail-swiper
+    :deep(
+      .carousel-slide--dual-image-sequence
+        .paired-sidebar__graphic--bottom
+        .slide-img--graphic-thumb
     ) {
     width: auto !important;
     max-width: min(100%, 280px) !important;
     height: auto !important;
     max-height: min(calc(var(--carousel-h) * 0.28), 22dvh) !important;
     object-fit: contain !important;
-    object-position: center bottom !important;
-    margin-left: auto;
-    margin-right: auto;
+    object-position: bottom center !important;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .project-body.is-expanded
@@ -2697,7 +3097,7 @@ export default {
     height: auto !important;
     max-height: min(340px, 46dvh) !important;
     object-fit: contain !important;
-    object-position: center !important;
+    object-position: top center !important;
   }
 
   .project-detail-swiper
@@ -2709,7 +3109,7 @@ export default {
     height: auto !important;
     max-height: min(300px, 44dvh) !important;
     object-fit: contain !important;
-    object-position: center !important;
+    object-position: top center !important;
   }
 
   .project-block--uniform-images .project-detail-swiper :deep(.carousel-slide--image img),
@@ -2744,9 +3144,9 @@ export default {
     height: auto !important;
     max-height: var(--carousel-h) !important;
     object-fit: contain !important;
-    object-position: center !important;
-    margin-left: auto;
-    margin-right: auto;
+    object-position: top center !important;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .project-block--uniform-images
@@ -2814,12 +3214,76 @@ export default {
     overflow: hidden;
   }
 
+  .project-body.is-expanded .carousel-slide--dual-image-sequence .slide-figure--dual-sequence {
+    flex: 1 1 auto;
+    height: 100% !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .slide-figure--dual-sequence
+    .paired-dual-columns-player--sidebar {
+    flex: 1 1 auto;
+    height: 100% !important;
+    min-height: 0;
+  }
+
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-grid--sidebar.dual-sequence-grid--graphic-left) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-col--detalle) {
+    order: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player--sidebar
+    :deep(.dual-sequence-col--graphic-mini),
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-sidebar__graphic--bottom {
+    order: 2;
+    justify-content: flex-end !important;
+    align-self: stretch !important;
+    align-items: flex-start !important;
+  }
+
   .project-body.is-expanded .carousel-slide--image-sequence .image-sequence-player,
   .project-body.is-expanded .carousel-slide--dual-image-sequence .image-sequence-player,
   .project-body.is-expanded .carousel-slide--dual-image-sequence .paired-dual-columns-player {
     max-height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-dual-columns-player
+    :deep(.paired-dual-columns-player__stack--small),
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .dual-sequence-col--graphic-mini,
+  .project-body.is-expanded
+    .carousel-slide--dual-image-sequence
+    .paired-sidebar__graphic--bottom {
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .project-body.is-expanded .carousel-slide--image-sequence .image-sequence-player :deep(.image-sequence-player__stack),
@@ -2838,7 +3302,7 @@ export default {
   .project-body.is-expanded .carousel-slide-parallax-layer {
     height: 100% !important;
     min-height: 100% !important;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .project-body.is-expanded
@@ -2852,7 +3316,7 @@ export default {
     :deep(.swiper-slide.carousel-slide--pdf-slide) {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: stretch !important;
   }
 
@@ -2861,16 +3325,16 @@ export default {
   .project-body.is-expanded .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
     flex: 1 1 auto;
     min-height: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
     background: var(--bg-page);
   }
 
   .project-body.is-expanded .carousel-slide--text .slide-text-inner,
   .project-body.is-expanded .carousel-slide--docs .slide-text-inner,
   .project-body.is-expanded .carousel-slide--pdf-slide .slide-text-inner {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin-top: 0;
+    margin-bottom: 0;
     flex-shrink: 0;
     max-height: 100%;
     min-height: 0;
@@ -2885,7 +3349,7 @@ export default {
     max-height: none !important;
     flex: 0 0 auto;
     touch-action: pan-x pan-y pinch-zoom;
-    padding: 0.35rem 0.75rem 1rem;
+    padding: 0 0.75rem 1rem;
     scrollbar-width: none;
     overscroll-behavior: auto;
   }

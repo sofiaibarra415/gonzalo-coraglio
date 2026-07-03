@@ -39,7 +39,9 @@
           </div>
         </div>
         <div class="dual-sequence-col dual-sequence-col--detalle">
-          <p v-if="leftLabel" class="dual-sequence-col__label">{{ leftLabel }}</p>
+          <h4 v-if="leftLabel" class="detail-heading detail-heading--v1 dual-sequence-col__label">
+            {{ leftLabel }}
+          </h4>
           <div class="paired-dual-columns-player__stack">
             <div
               v-for="(pair, i) in pairs"
@@ -61,7 +63,9 @@
 
       <template v-else>
         <div class="dual-sequence-col dual-sequence-col--detalle">
-          <p v-if="leftLabel" class="dual-sequence-col__label">{{ leftLabel }}</p>
+          <h4 v-if="leftLabel" class="detail-heading detail-heading--v1 dual-sequence-col__label">
+            {{ leftLabel }}
+          </h4>
           <div class="paired-dual-columns-player__stack">
             <div
               v-for="(pair, i) in pairs"
@@ -80,7 +84,9 @@
           </div>
         </div>
         <div class="dual-sequence-col">
-          <p v-if="rightLabel" class="dual-sequence-col__label">{{ rightLabel }}</p>
+          <h4 v-if="rightLabel" class="detail-heading detail-heading--v1 dual-sequence-col__label">
+            {{ rightLabel }}
+          </h4>
           <div class="paired-dual-columns-player__stack">
             <div
               v-for="(pair, i) in pairs"
@@ -114,7 +120,7 @@ export default {
     pairs: { type: Array, required: true },
     leftLabel: { type: String, default: '' },
     rightLabel: { type: String, default: '' },
-    altLeft: { type: String, default: 'Detalle' },
+    altLeft: { type: String, default: 'Detalle constructivo' },
     altRight: { type: String, default: 'Gráfico' },
     intervalMs: { type: Number, default: 2000 },
     pauseOnHover: { type: Boolean, default: true },
@@ -211,6 +217,12 @@ export default {
   max-width: 100%;
 }
 
+.paired-dual-columns-player--sidebar,
+.paired-dual-columns-player--sidebar .dual-sequence-grid--graphic-left {
+  height: 100%;
+  min-height: 0;
+}
+
 .dual-sequence-grid {
   display: flex;
   flex-direction: row;
@@ -218,8 +230,8 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 0;
-  align-items: stretch;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   box-sizing: border-box;
 }
 
@@ -228,8 +240,8 @@ export default {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 0.35rem;
 }
 
@@ -239,12 +251,16 @@ export default {
 }
 
 .dual-sequence-col__label {
-  margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  margin: 0 0 0.65rem;
+  font-family: var(--project-font, var(--font-display));
+  font-size: var(--project-title-size, 16px);
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.88;
-  text-align: center;
+  line-height: var(--project-line-height, normal);
+  color: var(--text-light);
+  font-style: normal;
+  text-align: left;
   max-width: 100%;
 }
 
@@ -255,81 +271,138 @@ export default {
   }
 }
 
-/* Mini gráfico izquierda | detalle principal derecha; bases alineadas abajo */
+/* Mini gráfico izquierda | detalle principal derecha; gráfico abajo */
 .dual-sequence-grid--sidebar.dual-sequence-grid--graphic-left {
   display: grid;
-  grid-template-columns: minmax(88px, 200px) minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(10px, 2.5vw, 20px);
-  align-items: end;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
 .dual-sequence-col--graphic-mini {
+  display: flex;
+  flex-direction: column;
   justify-content: flex-end;
-  align-items: center;
-  align-self: end;
-  max-width: 200px;
+  align-items: flex-start;
+  align-self: stretch;
+  width: fit-content;
+  max-width: min(200px, 100%);
+  min-height: 0;
+  overflow: visible;
 }
 
 .dual-sequence-col--detalle {
   min-height: 120px;
-  justify-content: flex-end;
-  align-items: center;
-  align-self: end;
+  justify-content: flex-start;
+  align-items: flex-start;
+  align-self: start;
 }
 
 .paired-sidebar__graphic--bottom {
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-end;
   min-height: 0;
+  margin-top: auto;
+  overflow: visible;
 }
 
-.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(.slide-img),
-.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(picture) {
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__stack--small {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(.slide-img--graphic-thumb),
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(.slide-img) {
+  display: block;
   max-width: min(200px, 100%) !important;
-  max-height: min(130px, 22vh) !important;
   width: auto !important;
   height: auto !important;
   object-fit: contain !important;
+  object-position: bottom center !important;
+}
+
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(picture) {
+  display: block;
+  width: auto;
+  max-width: min(200px, 100%);
+  margin: 0;
+  overflow: visible;
+}
+
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__stack--small,
+.paired-sidebar__graphic--bottom .paired-dual-columns-player__frame {
+  overflow: visible;
 }
 
 @media (min-width: 769px) {
+  .paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(.slide-img--graphic-thumb),
   .paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(.slide-img),
   .paired-sidebar__graphic--bottom .paired-dual-columns-player__frame :deep(picture) {
     max-width: min(220px, 100%) !important;
-    max-height: min(160px, 26vh) !important;
   }
 }
 
 @media (max-width: 768px) {
-  .dual-sequence-grid--graphic-left {
-    grid-template-columns: 1fr;
-    align-items: stretch;
+  .paired-dual-columns-player--sidebar,
+  .paired-dual-columns-player--sidebar .dual-sequence-grid--graphic-left {
+    height: 100%;
+    min-height: 0;
   }
 
-  .dual-sequence-col--graphic-mini {
-    order: 2;
-    max-width: none;
-    justify-content: center;
-    align-self: center;
+  .dual-sequence-grid--sidebar.dual-sequence-grid--graphic-left {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 1fr;
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
+    gap: clamp(6px, 2vw, 12px);
   }
 
   .dual-sequence-col--detalle {
     order: 1;
+    min-height: 0;
+    height: 100%;
     justify-content: flex-start;
+    align-self: stretch;
+  }
+
+  .dual-sequence-col--graphic-mini {
+    order: 2;
+    width: fit-content;
+    max-width: min(120px, 32vw);
+    justify-content: flex-end;
+    align-items: flex-start;
+    align-self: stretch;
+    margin-top: 0;
+    min-height: 0;
+  }
+
+  .paired-sidebar__graphic--bottom {
+    margin-top: auto;
+    align-items: flex-end;
   }
 }
 
 .paired-dual-columns-player__stack--small {
   max-width: 100%;
-  width: 100%;
+  width: fit-content;
 }
 
 .paired-dual-columns-player__stack {
   display: grid;
   grid-template: 1fr / 1fr;
-  place-items: center;
+  place-items: start;
   width: 100%;
   min-height: 0;
 }
@@ -337,8 +410,8 @@ export default {
 .paired-dual-columns-player__frame {
   grid-area: 1 / 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   opacity: 0;
   transition: opacity 0.55s ease;
@@ -354,8 +427,8 @@ export default {
 
 .paired-dual-columns-player__frame :deep(picture) {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   max-width: 100%;
   margin: 0;

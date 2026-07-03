@@ -128,7 +128,7 @@ export default {
 .image-sequence-player__stack {
   display: grid;
   grid-template: 1fr / 1fr;
-  place-items: center;
+  place-items: start;
   width: 100%;
   min-height: 0;
 }
@@ -136,8 +136,8 @@ export default {
 .image-sequence-player__frame {
   grid-area: 1 / 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   opacity: 0;
   transition: opacity 0.55s ease;
@@ -153,8 +153,8 @@ export default {
 
 .image-sequence-player__frame :deep(picture) {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
   max-width: 100%;
   margin: 0;
