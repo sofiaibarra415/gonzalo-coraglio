@@ -3,14 +3,23 @@
     <div class="container">
       <div class="about-content">
         <div class="about-text">
-          <span class="section-label">Sobre Mí</span>
           <h2 class="section-title section-title--display">
-            Arquitectura<br />con visión
+            Sobre mí
           </h2>
           <p class="about-lede">
-            Cada proyecto nace de escuchar el lugar, el clima y a quienes lo van a
-            habitar. El resultado no es solo un edificio: es un espacio que se
-            siente propio desde el primer día.
+            Estudiante avanzado de Arquitectura (FAU-UNLP), actualmente cursando el
+            Trabajo Final de Carrera (TFC). Desde 2022 desarrollo trabajo freelance
+            en documentación técnica y visualización arquitectónica: elaboración de
+            planos, renders fotorrealistas y entregables para clientes particulares.
+            Manejo avanzado de AutoCAD, SketchUp, Lumion, D5 Render y Photoshop, con
+            incorporación progresiva de Revit y flujo BIM.
+          </p>
+          <p class="about-lede">
+            Mi interés particular está en la escala del detalle: el diseño de
+            interiores y de mobiliario, donde la atención a cada elemento define la
+            experiencia del espacio. Me atrae la sustentabilidad como criterio de
+            diseño, y busco constantemente incorporar herramientas y enfoques que
+            aporten valor a cada proyecto.
           </p>
 
           <div class="about-stats-strip">
@@ -277,7 +286,7 @@ export default {
 }
 
 .section-title--display {
-  font-size: clamp(2.6rem, 4.4vw, 3.75rem);
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;

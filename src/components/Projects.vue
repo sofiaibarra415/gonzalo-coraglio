@@ -22,6 +22,7 @@
             'project-block--uniform-images': project.uniformImages
           }"
           :data-project-idx="index"
+          :data-project-slug="project.slug"
           role="listitem"
         >
           <header
@@ -116,7 +117,8 @@
                       {
                         'carousel-slide--hero': item.slide.isHero,
                         'carousel-slide--dual-with-side-text':
-                          item.slide.type === 'dual-image-sequence' &&
+                          (item.slide.type === 'dual-image-sequence' ||
+                            item.slide.type === 'image') &&
                           item.slide.sideText,
                         'carousel-slide--sequence-tall':
                           (item.slide.type === 'image-sequence' &&
@@ -141,6 +143,38 @@
                           loading="lazy"
                         />
                       </button>
+                      <div
+                        v-else-if="
+                          item.slide.type === 'image' && item.slide.sideText
+                        "
+                        class="slide-dual-with-side-text"
+                      >
+                        <figure
+                          class="slide-figure slide-figure--dual-with-side-text"
+                        >
+                          <OptimizedPicture
+                            :src="item.slide.src"
+                            :alt="item.slide.alt || `Imagen ${item.origIndex + 1}`"
+                            img-class="slide-img"
+                            loading="lazy"
+                          />
+                        </figure>
+                        <div class="slide-text-inner slide-text-inner--beside">
+                          <h4
+                            v-if="item.slide.sideText.heading"
+                            class="detail-heading detail-heading--v1"
+                          >
+                            {{ item.slide.sideText.heading }}
+                          </h4>
+                          <p
+                            v-for="(para, pii) in item.slide.sideText.paragraphs"
+                            :key="pii"
+                            class="detail-para"
+                          >
+                            {{ para }}
+                          </p>
+                        </div>
+                      </div>
                       <figure
                         v-else-if="item.slide.type === 'image'"
                         class="slide-figure"
@@ -809,6 +843,36 @@ export default {
 18 - Vidrio laminado 4+4
 19 - Leca / piedra partida`
 
+    const SECUENCIA_CONSTRUCTIVA_PASOS = [
+      'PRIMER PASO — Se colocan puntales de acero de altura regulable (se adaptan al terreno) y se unen con tubos estructurales de 6x4cm. Junto con esto se instala el anillo de contrapeso de HºAº, que sostiene el anillo tubular principal donde luego se enganchan los tensores de la cubierta.',
+      'SEGUNDO PASO — Se descargan con pluma las columnas y refuerzos estructurales (aprox. 12cm de diámetro). Se montan uniéndose entre sí y a la base, dando estabilidad a toda la estructura.',
+      'TERCER PASO — Se montan los paneles de PVC de 2x2m (con refuerzo estructural en la base) sobre la estructura, formando el piso. Sus huecos coinciden con las barillas roscadas que salen de los puntales, que después sirven para fijar los muros.',
+      'CUARTO PASO — Con la pluma se sostiene en el aire el anillo tubular de acero para conectar los cables tensores. Con el anillo suspendido, se empieza a estirar y presentar la cubierta textil.',
+      'QUINTO PASO — Se pasan los cables tensores por las ranuras guía de la cubierta, conectando todo el sistema. Después se tensan los cables para estirar el textil y dejar la estructura firme.',
+      'SEXTO PASO — Se arman los muros con tubos estructurales (con rosca interna, se atornillan a la barilla ya presente en el puntal) y paneles de PVC giratorios, que rotan sobre su eje para cerrar (impermeable) o abrir el muro según el clima. Se ubican según el uso que se le quiera dar al espacio: circulación, entradas, salidas, etc.'
+    ]
+
+    const CENTRO_VACUNATORIO_DETALLE_REFERENCIAS = `1 - Contrapeso de hormigón prefabricado
+2 - Pata de acero con articulación simple
+3 - Tensor horquilla mecanizada
+4 - Puntal estructural de acero
+5 - Refuerzo estructural de columnas – Diám. 12 cm
+6 - Cable de acero galvanizado 11 mm
+7 - Perfil de acero estructural – 6×4 cm
+8 - Piso – PVC símil madera – Esp. 2,5 cm
+9 - Marco de piel de acero – 5×5 cm
+10 - Cable de acero galvanizado 11 mm
+11 - Tensor horquilla mecanizada
+12 - Perno ASTM 15,9 mm
+13 - Anillo a tracción – caño de acero – d. 12 cm
+14 - Perno ASTM 15,9 mm – unión pletina
+15 - Chapa de acero microperforada 2 mm
+16 - Cable de acero galvanizado 11 mm
+17 - Unión con pletina prensada
+18 - Perno ASTM 15,9 mm
+19 - Unión soldada de doble empalme
+20 - Membrana TX30 – Tipo V`
+
     const projectsBase = [
       {
         slug: 'img-random',
@@ -973,8 +1037,22 @@ export default {
             skipText: true
           },
           {
+            image: '/Centro vacunatorio/RENDER 02.png',
+            kicker: 'Render',
+            heading: 'Vista exterior 02',
+            skipText: true
+          },
+          {
             image: '/Centro vacunatorio/detalle.png',
-            heading: 'Detalle constructivo'
+            heading: 'Referencias',
+            paragraphs: [CENTRO_VACUNATORIO_DETALLE_REFERENCIAS],
+            sideTextRight: true
+          },
+          {
+            image: '/Centro vacunatorio/secuencia constructiva grafico_.png',
+            heading: 'Secuencia constructiva',
+            paragraphs: SECUENCIA_CONSTRUCTIVA_PASOS,
+            sideTextRight: true
           }
         ]
       }
@@ -1042,7 +1120,16 @@ export default {
           out.push({
             type: 'image',
             src: panel.image,
-            alt: panel.heading || 'Vista'
+            alt: panel.heading || 'Vista',
+            ...(panel.sideTextRight &&
+            (panel.heading || (panel.paragraphs && panel.paragraphs.length))
+              ? {
+                  sideText: {
+                    heading: panel.heading || '',
+                    paragraphs: panel.paragraphs || []
+                  }
+                }
+              : {})
           })
         }
         if (panel.pdfLink) {
@@ -1853,7 +1940,7 @@ export default {
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)) {
     width: max-content !important;
-    max-width: min(88vw, 620px);
+    max-width: min(92vw, 1100px);
     flex-shrink: 0;
   }
 
@@ -1873,7 +1960,7 @@ export default {
 
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
     width: auto;
-    max-width: min(85vw, 750px);
+    max-width: min(92vw, 1100px);
     flex-shrink: 0;
   }
 
@@ -1902,10 +1989,8 @@ export default {
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--image-sequence:not(.carousel-slide--hero)),
   .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)),
-  .project-detail-swiper
-    :deep(.swiper-slide.carousel-slide--dual-with-side-text:not(.carousel-slide--hero)) {
-    max-width: min(90vw, 960px) !important;
+    :deep(.swiper-slide.carousel-slide--dual-image-sequence:not(.carousel-slide--hero)) {
+    max-width: min(94vw, 1300px) !important;
   }
 
   .project-detail-swiper
@@ -1914,7 +1999,7 @@ export default {
   }
 
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--hero) {
-    max-width: min(90vw, 960px) !important;
+    max-width: min(94vw, 1300px) !important;
   }
 
   .project-detail-swiper :deep(.carousel-slide--image img),
@@ -1923,7 +2008,7 @@ export default {
   .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img),
   .project-detail-swiper :deep(.carousel-slide--dual-image-sequence img),
   .project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
-    max-width: min(90vw, 960px) !important;
+    max-width: min(94vw, 1300px) !important;
     max-height: min(620px, 75vh) !important;
   }
 
@@ -2098,6 +2183,17 @@ export default {
   margin: 0;
 }
 
+/* Imagen simple con texto al lado (secuencia constructiva): la figura no debe
+   ocupar el 100% del ancho, tiene que dejar lugar a la columna de texto. */
+.carousel-slide--image.carousel-slide--dual-with-side-text .slide-figure {
+  width: auto;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .carousel-slide--image .slide-figure :deep(picture),
 .carousel-slide--image .slide-figure--hero-toggle :deep(picture),
 .carousel-slide--image-sequence .image-sequence-player :deep(picture),
@@ -2253,7 +2349,7 @@ export default {
   object-position: top center !important;
   width: auto;
   height: auto;
-  max-width: min(400px, 74vw);
+  max-width: min(600px, 92vw);
   max-height: min(300px, 48vh);
   border-radius: var(--project-img-radius);
 }
@@ -2265,8 +2361,20 @@ export default {
   .project-detail-swiper :deep(.carousel-slide--image-sequence .slide-img),
   .project-detail-swiper :deep(.carousel-slide--dual-image-sequence img),
   .project-detail-swiper :deep(.carousel-slide--dual-image-sequence .slide-img) {
-    max-width: min(950px, 85vw);
+    max-width: min(1100px, 92vw);
     max-height: min(620px, 75vh);
+  }
+}
+
+/* Imagen simple con texto al lado (solo en escritorio: en móvil el layout se
+   apila y la imagen puede usar el ancho normal). La imagen tiene que ceder
+   espacio a la columna de texto, si no el texto termina pisándola. */
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--image.carousel-slide--dual-with-side-text img),
+  .project-detail-swiper
+    :deep(.carousel-slide--image.carousel-slide--dual-with-side-text .slide-img) {
+    max-width: min(760px, 48vw) !important;
   }
 }
 
@@ -2449,16 +2557,15 @@ export default {
 }
 
 /*
- * Slide hero (toggle FLIP): no usar 100%/100% — anula los topes del carrusel y en
- * móvil (alto auto) el % puede equivaler a la altura intrínseca de la foto.
- * Un tope explícito un poco menor que el resto evita que un vertical domine la franja.
+ * Slide hero (toggle FLIP): mismo tope de alto que el resto de las imágenes del
+ * carrusel, para que la primera slide no se vea a menor escala que las siguientes.
  */
 .project-detail-swiper
   :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
 .project-detail-swiper
   :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
-  max-width: min(400px, 74vw) !important;
-  max-height: min(280px, 45vh) !important;
+  max-width: min(600px, 92vw) !important;
+  max-height: min(300px, 48vh) !important;
 }
 
 @media (min-width: 769px) {
@@ -2466,8 +2573,8 @@ export default {
     :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
-    max-width: min(950px, 85vw) !important;
-    max-height: min(520px, 68vh) !important;
+    max-width: min(1100px, 92vw) !important;
+    max-height: min(620px, 75vh) !important;
   }
 }
 
@@ -2476,8 +2583,8 @@ export default {
     :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image img),
   .project-detail-swiper
     :deep(.swiper-slide.carousel-slide--hero.carousel-slide--image .slide-img) {
-    max-width: min(90vw, 960px) !important;
-    max-height: min(520px, 68vh) !important;
+    max-width: min(1300px, 94vw) !important;
+    max-height: min(620px, 75vh) !important;
   }
 }
 
