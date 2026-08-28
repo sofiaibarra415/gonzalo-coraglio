@@ -106,6 +106,9 @@
         </div>
       </template>
     </div>
+    <div v-if="pairs.length > 1" class="paired-dual-columns-player__counter" aria-hidden="true">
+      {{ currentIndex + 1 }}/{{ pairs.length }}
+    </div>
   </div>
 </template>
 
@@ -213,8 +216,26 @@ export default {
 
 <style scoped>
 .paired-dual-columns-player {
+  position: relative;
   width: 100%;
   max-width: 100%;
+}
+
+.paired-dual-columns-player__counter {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 2;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.55);
+  color: #fff;
+  font-family: var(--project-font, var(--font-display));
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .paired-dual-columns-player--sidebar,

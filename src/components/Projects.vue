@@ -162,7 +162,7 @@
                         <div class="slide-text-inner slide-text-inner--beside">
                           <h4
                             v-if="item.slide.sideText.heading"
-                            class="detail-heading detail-heading--v1"
+                            class="detail-heading detail-heading--v0"
                           >
                             {{ item.slide.sideText.heading }}
                           </h4>
@@ -543,9 +543,10 @@ export default {
       isMobileProjects.value ? 1 : 'auto'
     )
 
-    /* Desktop: aire entre slides. Móvil: 0 para que cada slide sea 100% del carril (sin ancho tipo max-content). */
+    /* Desktop: mismo aire (30px) entre cualquier par de slides, sea imagen o texto.
+       Móvil: 0 para que cada slide sea 100% del carril (sin ancho tipo max-content). */
     const swiperSpaceBetween = computed(() =>
-      isMobileProjects.value ? 0 : 10
+      isMobileProjects.value ? 0 : 30
     )
 
     /** Falso: el alto lo fija CSS (--carousel-h); así los slides de texto miden lo mismo que las imágenes y el texto puede centrarse en vertical */
@@ -822,6 +823,12 @@ export default {
       'Texto de relleno para maquetación. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eiusmod tempor incididunt ut labore et dolore magna aliqua.'
     const LOREM2 =
       'Segundo párrafo de demostración. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+    const MEDIATECA_INTRO =
+      'Mediateca ubicada en La Plata, Argentina, en el terreno entre Av. 1 y calle Juan Prossi, a una cuadra del estadio de Estudiantes de La Plata y cercano al de Gimnasia y Esgrima, con el contrafrente hacia los Bosques de La Plata, un centro atractor muy importante en la ciudad. El proyecto organiza aulas, biblioteca, salas de lectura y oficinas administrativas alrededor del alma del proyecto: una rampa central que conecta todos los niveles y concentra la circulación de los estudiantes hacia cada punto del edificio.'
+    const MEDIATECA_PARASOLES = [
+      'La piel de parasoles verticales envuelve el volumen, los sectores más privados, como aulas y administración, tienen mayor densidad de parasoles, mientras que los sectores sociales dejan pasar más luz así se conectan más con el entorno.',
+      'Al auditorio se ingresa desde Av. 1, por debajo de la gran escalinata que sube hasta el ingreso principal del edificio en el Nivel 1, y tiene un segundo acceso desde la plaza pública del contrafrente, hacia los Bosques de La Plata.'
+    ]
 
     const DETALLE_REFERENCIAS = `1 - Tierra natural
 2 - Suelo compactado
@@ -853,24 +860,43 @@ export default {
     ]
 
     const CENTRO_VACUNATORIO_DETALLE_REFERENCIAS = `1 - Contrapeso de hormigón prefabricado
+
 2 - Pata de acero con articulación simple
+
 3 - Tensor horquilla mecanizada
+
 4 - Puntal estructural de acero
+
 5 - Refuerzo estructural de columnas – Diám. 12 cm
+
 6 - Cable de acero galvanizado 11 mm
+
 7 - Perfil de acero estructural – 6×4 cm
+
 8 - Piso – PVC símil madera – Esp. 2,5 cm
+
 9 - Marco de piel de acero – 5×5 cm
+
 10 - Cable de acero galvanizado 11 mm
+
 11 - Tensor horquilla mecanizada
+
 12 - Perno ASTM 15,9 mm
+
 13 - Anillo a tracción – caño de acero – d. 12 cm
+
 14 - Perno ASTM 15,9 mm – unión pletina
+
 15 - Chapa de acero microperforada 2 mm
+
 16 - Cable de acero galvanizado 11 mm
+
 17 - Unión con pletina prensada
+
 18 - Perno ASTM 15,9 mm
+
 19 - Unión soldada de doble empalme
+
 20 - Membrana TX30 – Tipo V`
 
     const projectsBase = [
@@ -952,27 +978,19 @@ export default {
         carouselPanels: [
           {
             image: '/Mediateca/imagen 01 axo aerea_1 - Photo.jpg',
-            kicker: 'Vista 1',
-            heading: 'Axonométrica — toma 1',
-            paragraphs: [LOREM, LOREM2]
+            paragraphs: [MEDIATECA_INTRO]
           },
           {
             image: '/Mediateca/imagen 01 axo aerea_2 - Photo.jpg',
-            kicker: 'Vista 2',
-            heading: 'Axonométrica — toma 2',
-            paragraphs: [LOREM]
+            skipText: true
           },
           {
             image: '/Mediateca/imagen 01 axo aerea_3 - Photo.jpg',
-            kicker: 'Vista 3',
-            heading: 'Axonométrica — toma 3',
-            paragraphs: [LOREM, LOREM2]
+            skipText: true
           },
           {
             image: '/Mediateca/imagen 01 axo aerea_4 - Photo.jpg',
-            kicker: 'Vista 4',
-            heading: 'Axonométrica — toma 4',
-            paragraphs: [LOREM]
+            paragraphs: MEDIATECA_PARASOLES
           },
           {
             imageCarousel: [
@@ -988,16 +1006,15 @@ export default {
             skipText: true
           },
           {
-            heading: 'Detalle constructivo',
             paragraphs: [
-              'Detalle 0 se muestra junto al gráfico del detalle 0; Detalle 1 junto al gráfico del detalle 1. Las dos columnas cambian al unísono cada dos segundos.'
+              'En planta baja y Nivel 1, un ala lindera a la medianera concentra el sector administrativo y más privado. Desde el segundo nivel en adelante, cada planta repite el esquema de dos alas —aulas de un lado, biblioteca y salas de lectura del otro— mirando ambas al atrio central, espejándose o generando dobles alturas en los niveles superiores.'
             ]
           },
           {
             dualImageCarousel: {
               syncPairs: true,
               graphicMiniLeftAlignBottom: true,
-              leftLabel: 'Detalle constructivo',
+              leftLabel: '',
               rightLabel: '',
               pairs: [
                 {
@@ -1037,6 +1054,15 @@ export default {
             skipText: true
           },
           {
+            image: '/Centro vacunatorio/secuencia constructiva grafico_.png',
+            heading: 'Secuencia constructiva',
+            skipText: true
+          },
+          {
+            heading: 'Secuencia constructiva',
+            paragraphs: SECUENCIA_CONSTRUCTIVA_PASOS
+          },
+          {
             image: '/Centro vacunatorio/RENDER 02.png',
             kicker: 'Render',
             heading: 'Vista exterior 02',
@@ -1046,12 +1072,6 @@ export default {
             image: '/Centro vacunatorio/detalle.png',
             heading: 'Referencias',
             paragraphs: [CENTRO_VACUNATORIO_DETALLE_REFERENCIAS],
-            sideTextRight: true
-          },
-          {
-            image: '/Centro vacunatorio/secuencia constructiva grafico_.png',
-            heading: 'Secuencia constructiva',
-            paragraphs: SECUENCIA_CONSTRUCTIVA_PASOS,
             sideTextRight: true
           }
         ]
@@ -1877,13 +1897,13 @@ export default {
     height: 100% !important;
   }
 
-  /* Alineación superior del bloque de texto dentro del slide */
+  /* Bloque de texto centrado verticalmente dentro del slide */
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--text),
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--docs),
   .project-detail-swiper :deep(.swiper-slide.carousel-slide--pdf-slide) {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: stretch !important;
   }
 
@@ -1892,7 +1912,7 @@ export default {
   .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
     flex: 1 1 auto;
     min-height: 100% !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: flex-start !important;
   }
 
@@ -2069,7 +2089,7 @@ export default {
     font-size: var(--project-text-size);
     line-height: var(--project-line-height);
     letter-spacing: 0.01em;
-    padding: 0 clamp(1rem, 2vw, 1.75rem) 1.1rem;
+    padding: 0;
   }
 
   .project-detail-swiper :deep(.slide-text-inner p) {
@@ -2220,7 +2240,7 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: clamp(10px, 2vw, 22px);
+  gap: 30px;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -2240,10 +2260,15 @@ export default {
   flex: 0 0 min(420px, 44vw);
   width: min(480px, 48vw);
   max-width: min(560px, 52vw);
-  align-self: flex-start;
   overflow-y: auto;
   max-height: 100%;
   padding-top: 0;
+}
+
+/* Mayor especificidad que .slide-text-inner (que fija align-self: flex-start)
+   para que el texto lateral quede centrado verticalmente junto a su imagen. */
+.slide-text-inner.slide-text-inner--beside {
+  align-self: center;
 }
 
 @media (max-width: 768px) {
@@ -2306,10 +2331,10 @@ export default {
   font-family: var(--project-font);
   font-size: var(--project-title-size);
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  text-transform: none;
   line-height: var(--project-line-height);
-  color: var(--text-light);
+  color: var(--primary-color);
   font-style: normal;
 }
 
@@ -2643,7 +2668,7 @@ export default {
   overflow-x: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 0 0.5rem 0.85rem 0;
+  padding: 0;
   box-sizing: border-box;
   background: transparent;
   scrollbar-width: thin;
@@ -2660,7 +2685,7 @@ export default {
 
 @media (min-width: 769px) {
   .slide-text-inner {
-    padding: 0 clamp(1.25rem, 2.5vw, 2.25rem) 1.1rem clamp(1.25rem, 2.5vw, 2.25rem);
+    padding: 0;
   }
 
   .project-detail-swiper :deep(.slide-text-inner) {
@@ -2769,45 +2794,24 @@ export default {
   line-height: var(--project-line-height);
 }
 
-.detail-heading--v0 {
+/* Los cuatro "tonos" de título quedan todos con el estilo de "Secuencia constructiva" (v0) */
+.detail-heading--v0,
+.detail-heading--v1,
+.detail-heading--v2,
+.detail-heading--v3 {
   font-family: var(--project-font);
   font-size: var(--project-title-size);
   font-weight: 600;
+  font-style: normal;
   letter-spacing: -0.01em;
-  color: var(--primary-color);
-}
-
-.detail-heading--v1 {
-  font-family: var(--project-font);
-  font-size: var(--project-title-size);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  text-transform: none;
   line-height: var(--project-line-height);
-  color: var(--text-light);
+  color: var(--primary-color);
 }
 
 .projects .detail-heading.detail-heading--v1,
 .projects :deep(.detail-heading.detail-heading--v1) {
-  text-transform: uppercase;
-}
-
-.detail-heading--v2 {
-  font-family: var(--project-font);
-  font-size: var(--project-title-size);
-  font-weight: 500;
-  font-style: normal;
-  letter-spacing: 0;
-  color: var(--text-dark);
-}
-
-.detail-heading--v3 {
-  font-family: var(--project-font);
-  font-size: var(--project-title-size);
-  font-weight: 500;
-  font-style: normal;
-  letter-spacing: 0.01em;
-  color: var(--text-light);
+  text-transform: none;
 }
 
 .detail-para {
@@ -2815,29 +2819,18 @@ export default {
   font-family: var(--project-font);
   font-size: var(--project-text-size);
   line-height: var(--project-line-height);
-  color: var(--text-dark);
+  color: #565656;
   white-space: pre-line;
 }
 
-/* Ritmo al deslizar: tres tonos/tamaños que se repiten */
-.detail-para--tone-0 {
-  font-size: var(--project-text-size);
-  color: var(--color-deep);
-  font-weight: 400;
-}
-
-.detail-para--tone-1 {
-  font-size: var(--project-text-size);
-  color: var(--color-slate);
-  line-height: var(--project-line-height);
-  font-weight: 400;
-}
-
+/* Los tres tonos quedan iguales: mismo tamaño, peso y color para todos los párrafos */
+.detail-para--tone-0,
+.detail-para--tone-1,
 .detail-para--tone-2 {
   font-size: var(--project-text-size);
-  color: var(--color-forest);
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  line-height: var(--project-line-height);
+  font-weight: 400;
+  letter-spacing: normal;
 }
 
 .detail-para:last-child {
@@ -3522,7 +3515,7 @@ export default {
     :deep(.swiper-slide.carousel-slide--pdf-slide) {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: stretch !important;
   }
 
@@ -3531,7 +3524,7 @@ export default {
   .project-body.is-expanded .carousel-slide--pdf-slide .carousel-slide-parallax-layer {
     flex: 1 1 auto;
     min-height: 100% !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: flex-start !important;
     background: var(--bg-page);
   }
@@ -3555,7 +3548,7 @@ export default {
     max-height: none !important;
     flex: 0 0 auto;
     touch-action: pan-x pan-y pinch-zoom;
-    padding: 0 0.75rem 1rem;
+    padding: 0;
     scrollbar-width: none;
     overscroll-behavior: auto;
   }
