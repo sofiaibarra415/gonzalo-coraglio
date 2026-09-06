@@ -2,11 +2,7 @@
   <section id="proyectos" class="projects">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">Portfolio</span>
         <h2 class="section-title">Proyectos</h2>
-        <p class="section-subtitle">
-          Tocá la miniatura para abrir el carrusel; podés dejar varios proyectos expandidos a la vez. En móvil, tocá el título o la primera imagen para cerrar cada uno. Escape cierra todos los detalles abiertos.
-        </p>
       </div>
     </div>
 
@@ -1054,6 +1050,11 @@ export default {
             skipText: true
           },
           {
+            paragraphs: [
+              'Centro de vacunación desmontable, pensado como un sistema modular que se puede montar en cualquier contexto. Los muros no son fijos, se ubican según la necesidad de cada emplazamiento respetando la modulación estructural. Sin muros ciegos y con la cubierta tensada despegada de los cerramientos, el sistema favorece la ventilación cruzada para evitar la propagación de bacterias dentro del centro.'
+            ]
+          },
+          {
             image: '/Centro vacunatorio/secuencia constructiva grafico_.png',
             heading: 'Secuencia constructiva',
             skipText: true
@@ -1067,6 +1068,11 @@ export default {
             kicker: 'Render',
             heading: 'Vista exterior 02',
             skipText: true
+          },
+          {
+            paragraphs: [
+              'La estructura de mástiles sostiene una cubierta tensada independiente de los muros de madera. Todo el sistema es prefabricado, lo que permite un montaje y desmontaje rápido y fácil de trasladar.'
+            ]
           },
           {
             image: '/Centro vacunatorio/detalle.png',
@@ -2240,7 +2246,7 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 30px;
+  gap: clamp(10px, 2vw, 22px);
   width: 100%;
   height: 100%;
   min-height: 0;

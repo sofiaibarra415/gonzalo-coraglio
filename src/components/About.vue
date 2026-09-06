@@ -21,15 +21,6 @@
             diseño, y busco constantemente incorporar herramientas y enfoques que
             aporten valor a cada proyecto.
           </p>
-
-          <div class="about-stats-strip">
-            <div class="stat-chip" v-for="(stat, index) in stats" :key="index">
-              <span class="stat-chip-number">{{ stat.number }}</span>
-              <span class="stat-chip-label">{{ stat.label }}</span>
-            </div>
-          </div>
-
-          <a href="#proyectos" class="about-cta-pill">Ver proyectos</a>
         </div>
 
         <div class="about-collage" aria-hidden="true">
@@ -116,12 +107,6 @@ export default {
   name: 'About',
   components: { OptimizedPicture },
   setup() {
-    const stats = [
-      { number: '50+', label: 'Proyectos Completados' },
-      { number: '15+', label: 'Años de Experiencia' },
-      { number: '30+', label: 'Clientes Satisfechos' }
-    ]
-
     const skills = [
       {
         title: 'Diseño Arquitectónico',
@@ -241,7 +226,6 @@ export default {
     }
 
     return {
-      stats,
       skills,
       collageImages,
       openCvPdf
@@ -299,54 +283,6 @@ export default {
   font-size: 1.1rem;
   max-width: 32rem;
   margin-bottom: 2.5rem;
-}
-
-.about-stats-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2.25rem;
-  margin-bottom: 2.5rem;
-}
-
-.stat-chip {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.stat-chip-number {
-  font-family: var(--font-display);
-  font-size: 1.9rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--primary-color);
-}
-
-.stat-chip-label {
-  font-size: 0.82rem;
-  color: var(--text-light);
-  letter-spacing: 0.01em;
-}
-
-.about-cta-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.95rem 1.85rem;
-  font-family: var(--font-display);
-  font-size: 0.98rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  text-decoration: none;
-  border: 1.5px solid var(--primary-color);
-  border-radius: 999px;
-  transition: var(--transition);
-}
-
-.about-cta-pill:hover {
-  background: var(--primary-color);
-  color: var(--white);
-  transform: translateY(-2px);
 }
 
 .about-collage {
@@ -585,10 +521,6 @@ export default {
     min-width: 0;
     padding: 1.05rem 1.5rem;
     font-size: 1rem;
-  }
-
-  .about-stats-strip {
-    gap: 1.5rem;
   }
 
   .about-collage {

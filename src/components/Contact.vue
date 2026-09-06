@@ -3,12 +3,7 @@
     <div class="container">
       <div class="contact-content">
         <div class="contact-info">
-          <span class="section-label">Contacto</span>
           <h2 class="section-title">Trabajemos juntos</h2>
-          <p class="contact-description">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
 
           <div class="contact-details">
             <div class="contact-item">
@@ -51,7 +46,6 @@
           <div class="social-links">
             <a href="#" class="social-link">LinkedIn</a>
             <a href="#" class="social-link">Instagram</a>
-            <a href="#" class="social-link">Behance</a>
           </div>
         </div>
       </div>
@@ -81,17 +75,6 @@ export default {
   position: static;
 }
 
-.section-label {
-  display: inline-block;
-  font-family: var(--font-sans);
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 0.65rem;
-}
-
 .section-title {
   font-family: var(--font-display);
   font-size: 2.35rem;
@@ -100,16 +83,6 @@ export default {
   line-height: 1.2;
   color: var(--primary-color);
   margin-bottom: 1.5rem;
-}
-
-.contact-description {
-  color: var(--text-light);
-  line-height: 1.8;
-  margin-bottom: 3rem;
-  font-size: 1.05rem;
-  max-width: 520px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .contact-details {

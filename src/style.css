@@ -35,7 +35,7 @@
   --text-muted: var(--color-moonlit);
 
   --bg-page: #ffffff;
-  --footer-bg: #ffffff;
+  --footer-bg: var(--color-mint);
   --footer-text: var(--color-charcoal);
   --footer-muted: var(--color-urban-fog);
   --footer-border: rgba(43, 43, 43, 0.12);

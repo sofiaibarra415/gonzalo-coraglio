@@ -153,7 +153,6 @@ export default {
   position: relative;
   /* Por encima de .nav-drawer (1001): si no, el panel tapa el botón y la “cruz” no recibe clics */
   z-index: 1005;
-  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
