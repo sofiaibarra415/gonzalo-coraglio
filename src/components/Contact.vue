@@ -2,9 +2,11 @@
   <section id="contacto" class="contact">
     <div class="container">
       <div class="contact-content">
-        <div class="contact-info">
+        <div class="contact-col contact-col--title">
           <h2 class="section-title">Trabajemos juntos</h2>
+        </div>
 
+        <div class="contact-col contact-col--details">
           <div class="contact-details">
             <div class="contact-item">
               <div class="contact-icon" aria-hidden="true">
@@ -42,7 +44,9 @@
               </div>
             </div>
           </div>
+        </div>
 
+        <div class="contact-col contact-col--social">
           <div class="social-links">
             <a href="#" class="social-link">LinkedIn</a>
             <a href="#" class="social-link">Instagram</a>
@@ -65,14 +69,19 @@ export default {
   background: transparent;
 }
 
+/* Tres columnas: título | datos de contacto | redes (una debajo de la otra) */
 .contact-content {
-  max-width: 640px;
+  max-width: 1100px;
   margin: 0 auto;
-  text-align: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 3rem;
+  align-items: center;
+  text-align: left;
 }
 
-.contact-info {
-  position: static;
+.contact-col {
+  min-width: 0;
 }
 
 .section-title {
@@ -82,14 +91,14 @@ export default {
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--primary-color);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .contact-details {
-  margin-bottom: 3rem;
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 0;
   width: 100%;
 }
@@ -104,8 +113,6 @@ export default {
   text-align: left;
   width: 100%;
   max-width: 420px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .contact-item:last-of-type {
@@ -146,9 +153,14 @@ export default {
 
 .social-links {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.social-link {
+  text-align: center;
+  white-space: nowrap;
 }
 
 .social-link {
@@ -169,9 +181,42 @@ export default {
   transform: translateY(-2px);
 }
 
+/* Tablet: título arriba a lo ancho, datos y redes debajo en dos columnas */
+@media (max-width: 1023px) {
+  .contact-content {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2.5rem;
+  }
+
+  .contact-col--title {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 768px) {
   .contact {
     padding: 4rem 0;
+  }
+
+  .contact-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .contact-col--title {
+    grid-column: auto;
+  }
+
+  .contact-item {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .social-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .section-title {

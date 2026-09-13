@@ -120,7 +120,12 @@
                           (item.slide.type === 'image-sequence' &&
                             item.slide.sequenceTall) ||
                           (item.slide.type === 'dual-image-sequence' &&
-                            item.slide.sequenceTall)
+                            item.slide.sequenceTall),
+                        'carousel-slide--sequence-small':
+                          item.slide.type === 'image-sequence' &&
+                          item.slide.sequenceSmall,
+                        'carousel-slide--image-small':
+                          item.slide.type === 'image' && item.slide.imageSmall
                       }
                     ]"
                   >
@@ -821,6 +826,18 @@ export default {
       'Segundo párrafo de demostración. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
     const MEDIATECA_INTRO =
       'Mediateca ubicada en La Plata, Argentina, en el terreno entre Av. 1 y calle Juan Prossi, a una cuadra del estadio de Estudiantes de La Plata y cercano al de Gimnasia y Esgrima, con el contrafrente hacia los Bosques de La Plata, un centro atractor muy importante en la ciudad. El proyecto organiza aulas, biblioteca, salas de lectura y oficinas administrativas alrededor del alma del proyecto: una rampa central que conecta todos los niveles y concentra la circulación de los estudiantes hacia cada punto del edificio.'
+    const MASTERPLAN_INTRO = [
+      'Este trabajo es la propuesta final de Taller Vertical de Arquitectura N°6 y plantea una propuesta para la ciudad de La Plata hacia el año 2082. La idea central es extender el eje fundacional de la ciudad más allá del casco histórico, generando un nuevo corredor urbano entre las avenidas 44 y 60, desde Av. 131 hasta Ruta 36. Ese corredor busca ordenar el crecimiento futuro de la ciudad combinando vivienda, trabajo, equipamientos públicos y espacios verdes, priorizando el transporte público y la movilidad activa por sobre el auto.',
+      'El proyecto parte de un diagnóstico de cuatro tendencias que la ciudad ya muestra hoy: expansión descontrolada del tejido urbano, saturación de los sistemas de movilidad, degradación ambiental y un fuerte incremento poblacional, que se proyecta en un millón de habitantes para 2082. A partir de ahí, la propuesta define una visión: una ciudad donde el transporte público y la movilidad activa reemplazan progresivamente al uso del auto particular. Para lograrlo, se establecen alturas y usos de suelo diferenciados según cada avenida del corredor, combinando zonas residenciales, productivas y de equipamiento.'
+    ]
+    const MASTERPLAN_AXONOMETRIA =
+      'Esta axonometría muestra la escala macro de la propuesta: un corredor de aproximadamente 10 km que se extiende desde Av. 131, en el límite del casco de La Plata, hasta Ruta 36. A lo largo de este eje se despliega un parque lineal central, que atraviesa las manzanas y conecta los distintos tramos del recorrido. A ambos lados del parque se ubican las manzanas residenciales, delimitadas transversalmente por las avenidas 44, 50, 56 y 60, que estructuran el ancho del corredor.'
+    const MASTERPLAN_TIPOLOGIAS =
+      'El sector residencial se organiza en tres tipologías según su posición respecto al corredor. Las viviendas sobre Av. 50 y sobre Av. 56 tienen una altura baja (12 niveles, FOT 3.4 y 2.9), mientras que las viviendas ubicadas en el interior del parque concentran la mayor densidad del conjunto, con 31 niveles y FOT 4. Esta distribución busca liberar el frente de las avenidas para usos de menor escala, y reservar la mayor altura para las torres que dan directamente al espacio verde central.'
+    const MASTERPLAN_PAISAJE =
+      'El paisaje del corredor se resuelve con una selección de vegetación nativa, organizada en distintas escalas según su ubicación: bosques y microbosques en el interior del parque, y arbolado de menor porte sobre avenidas y calles peatonales. A esto se suma una serie de estrategias de sustentabilidad urbana: suelos verdes absorbentes, solados drenantes, recolección de aguas pluviales y generación de energía solar, integradas al diseño del espacio público.'
+    const MASTERPLAN_PROGRAMA =
+      'Sobre el tramo norte del corredor, cerca del casco de La Plata, se ubica el sector administrativo-educativo-cultural, compuesto por 14 edificios públicos de baja altura (entre 3 y 8 niveles). El conjunto incluye una estación multimodal como puerta de acceso, oficinas administrativas, equipamiento cultural, educativo, de salud y deportivo, además de una sede universitaria y un centro cultural tecnológico ferroviario. Todos los edificios se organizan de forma dispersa dentro del parque, conectados por sendas peatonales.'
     const MEDIATECA_PARASOLES = [
       'La piel de parasoles verticales envuelve el volumen, los sectores más privados, como aulas y administración, tienen mayor densidad de parasoles, mientras que los sectores sociales dejan pasar más luz así se conectan más con el entorno.',
       'Al auditorio se ingresa desde Av. 1, por debajo de la gran escalinata que sube hasta el ingreso principal del edificio en el Nivel 1, y tiene un segundo acceso desde la plaza pública del contrafrente, hacia los Bosques de La Plata.'
@@ -936,27 +953,59 @@ export default {
         carouselPanels: [
           {
             image: '/Master plan/L0.png',
-            kicker: 'L0',
-            heading: 'Suelo y trama base',
-            paragraphs: [LOREM, LOREM2]
+            paragraphs: MASTERPLAN_INTRO
+          },
+          {
+            imageCarousel: ['/Master plan/L4.png', '/Master plan/L5.png'],
+            imageCarouselSmall: true,
+            paragraphs: [MASTERPLAN_AXONOMETRIA]
+          },
+          {
+            image: '/Master plan/L6.jpg',
+            skipText: true
           },
           {
             image: '/Master plan/L1.png',
-            kicker: 'L1',
-            heading: 'Nivel intermedio',
-            paragraphs: [LOREM]
+            skipText: true
+          },
+          {
+            imageCarousel: [
+              '/Master plan/Corte A.png',
+              '/Master plan/Corte B.png',
+              '/Master plan/Corte C.png'
+            ],
+            imageCarouselSmall: true,
+            paragraphs: [MASTERPLAN_TIPOLOGIAS]
+          },
+          {
+            image: '/Master plan/Vista peatonal.jpg',
+            skipText: true
           },
           {
             image: '/Master plan/L2.png',
-            kicker: 'L2',
-            heading: 'Densidad programática',
-            paragraphs: [LOREM, LOREM2]
+            skipText: true
           },
           {
-            image: '/Master plan/L3.png',
-            kicker: 'L3',
-            heading: 'Cubierta y equipamiento',
-            paragraphs: [LOREM]
+            image: '/Master plan/Paisaje vegetacion.png',
+            imageSmall: true,
+            paragraphs: [MASTERPLAN_PAISAJE]
+          },
+          {
+            image: '/Master plan/Vista parque.jpg',
+            skipText: true
+          },
+          {
+            image: '/Master plan/Equipamientos.png',
+            skipText: true
+          },
+          {
+            image: '/Master plan/Programa sector.png',
+            imageSmall: true,
+            paragraphs: [MASTERPLAN_PROGRAMA]
+          },
+          {
+            image: '/Master plan/Vista sector cultural.jpg',
+            skipText: true
           }
         ]
       },
@@ -1140,13 +1189,15 @@ export default {
             type: 'image-sequence',
             images,
             alt: panel.heading || 'Vista',
-            sequenceTall: panel.imageCarouselTall === true
+            sequenceTall: panel.imageCarouselTall === true,
+            sequenceSmall: panel.imageCarouselSmall === true
           })
         } else if (panel.image) {
           out.push({
             type: 'image',
             src: panel.image,
             alt: panel.heading || 'Vista',
+            imageSmall: panel.imageSmall === true,
             ...(panel.sideTextRight &&
             (panel.heading || (panel.paragraphs && panel.paragraphs.length))
               ? {
@@ -1922,6 +1973,27 @@ export default {
     align-items: flex-start !important;
   }
 
+  /* Carrusel chico de imágenes solapadas: centrado verticalmente dentro del slide.
+     NO BORRAR el min-height: `height: 100%` no alcanza porque el .swiper-wrapper
+     toma su alto del contenido, el slide se encoge hasta la imagen y no queda
+     nada que centrar. Los slides de texto se centran por lo mismo. */
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image-sequence.carousel-slide--sequence-small) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    min-height: var(--carousel-h) !important;
+  }
+
+  .carousel-slide--image-sequence.carousel-slide--sequence-small
+    .carousel-slide-parallax-layer {
+    flex: 1 1 auto;
+    min-height: 100% !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+  }
+
   .carousel-slide--text .slide-text-inner,
   .carousel-slide--docs .slide-text-inner,
   .carousel-slide--pdf-slide .slide-text-inner {
@@ -2584,6 +2656,87 @@ export default {
     :deep(.carousel-slide--image-sequence.carousel-slide--sequence-tall .slide-img) {
     max-width: min(90vw, 960px) !important;
     max-height: min(620px, 75vh) !important;
+  }
+}
+
+/* Imagen suelta chica: mismos topes que una imagen normal, al 67,5% (25% + otro 10%),
+   y centrada verticalmente en la franja. La clase la pone `imageSmall: true` en el panel. */
+.project-detail-swiper
+  :deep(.carousel-slide--image-small.carousel-slide--image-small img),
+.project-detail-swiper
+  :deep(.carousel-slide--image-small.carousel-slide--image-small .slide-img) {
+  max-width: min(405px, 62vw) !important;
+  max-height: min(203px, 32vh) !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--image-small.carousel-slide--image-small img),
+  .project-detail-swiper
+    :deep(.carousel-slide--image-small.carousel-slide--image-small .slide-img) {
+    max-width: min(743px, 62vw) !important;
+    max-height: min(419px, 51vh) !important;
+  }
+
+  /* Centrado vertical: mismo mecanismo que el carrusel chico de imágenes solapadas
+     (el min-height es lo que le da alto a la franja; sin eso no hay nada que centrar). */
+  .project-detail-swiper
+    :deep(.swiper-slide.carousel-slide--image.carousel-slide--image-small) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    min-height: var(--carousel-h) !important;
+  }
+
+  .carousel-slide--image-small .carousel-slide-parallax-layer {
+    flex: 1 1 auto;
+    min-height: 100% !important;
+    justify-content: center !important;
+  }
+
+  .carousel-slide--image.carousel-slide--image-small .slide-figure {
+    justify-content: center;
+  }
+
+  .carousel-slide--image.carousel-slide--image-small .slide-figure :deep(picture) {
+    align-items: center;
+  }
+}
+
+/* Versión chica del carrusel de imágenes solapadas: centrada verticalmente en el slide */
+.carousel-slide--image-sequence.carousel-slide--sequence-small
+  .slide-figure--inner-sequence {
+  justify-content: center;
+}
+
+.project-detail-swiper
+  :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small img),
+.project-detail-swiper
+  :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small .slide-img) {
+  width: auto !important;
+  max-width: min(253px, 60vw) !important;
+  max-height: min(184px, 30vh) !important;
+  object-fit: contain !important;
+}
+
+@media (min-width: 769px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small img),
+  .project-detail-swiper
+    :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small .slide-img) {
+    max-width: min(437px, 46vw) !important;
+    max-height: min(299px, 39vh) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-detail-swiper
+    :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small img),
+  .project-detail-swiper
+    :deep(.carousel-slide--sequence-small.carousel-slide--sequence-small.carousel-slide--sequence-small .slide-img) {
+    max-width: min(483px, 37vw) !important;
+    max-height: min(345px, 44vh) !important;
   }
 }
 
