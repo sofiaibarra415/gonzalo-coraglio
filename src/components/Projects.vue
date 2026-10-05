@@ -923,17 +923,23 @@ export default {
         area: '—',
         uniformImages: false,
         pdfs: null,
-        heroImage: '/IMG random/Imagen exterior.jpg',
+        heroImage: '/IMG random/imagen cocina.jpg',
         carouselPanels: [
           {
+            image: '/IMG random/imagen cocina.jpg',
+            kicker: 'Vista 1 / cocina',
+            heading: 'Cocina',
+            paragraphs: [LOREM]
+          },
+          {
             image: '/IMG random/Imagen exterior.jpg',
-            kicker: 'Vista 1 / exterior',
+            kicker: 'Vista 2 / exterior',
             heading: 'Fachada y contexto',
             paragraphs: [LOREM, LOREM2]
           },
           {
             image: '/IMG random/imagen interior 1.jpg',
-            kicker: 'Vista 2 / interior',
+            kicker: 'Vista 3 / interior',
             heading: 'Espacio interior',
             paragraphs: [LOREM]
           }
