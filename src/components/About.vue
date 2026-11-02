@@ -52,11 +52,12 @@
       </div>
       <div class="about-skills">
         <div class="about-cv-wrap">
-          <button
-            type="button"
+          <a
+            :href="cvUrl"
+            target="_blank"
+            rel="noopener noreferrer"
             class="about-cv-btn"
-            aria-label="Descargar o compartir CV en PDF"
-            @click="openCvPdf"
+            aria-label="Abrir CV en PDF en una pestaña nueva"
           >
             <svg
               class="about-cv-icon"
@@ -75,27 +76,9 @@
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             <span>Descargar CV</span>
-          </button>
+          </a>
         </div>
-        <h3 class="skills-title">Enfoque de Trabajo</h3>
       </div>
-    </div>
-
-    <div class="skills-band">
-      <a
-        v-for="(skill, index) in skills"
-        :key="index"
-        href="#proyectos"
-        class="skill-panel"
-        :style="{ background: skill.bg }"
-      >
-        <span class="skill-panel-kicker">
-          <span class="skill-panel-dot" aria-hidden="true"></span>
-          {{ skill.kicker }}
-        </span>
-        <h4 class="skill-panel-title">{{ skill.title }}</h4>
-        <span class="skill-panel-cta">Ver proyectos</span>
-      </a>
     </div>
   </section>
 </template>
@@ -107,128 +90,18 @@ export default {
   name: 'About',
   components: { OptimizedPicture },
   setup() {
-    const skills = [
-      {
-        title: 'Diseño Arquitectónico',
-        kicker: 'cada detalle, con intención',
-        bg: '#3A362F'
-      },
-      {
-        title: 'Planificación Urbana',
-        kicker: 'pensado a escala de ciudad',
-        bg: '#2B333A'
-      },
-      {
-        title: 'Sostenibilidad',
-        kicker: 'materiales y energía con conciencia',
-        bg: '#2E3A33'
-      },
-      {
-        title: 'Innovación',
-        kicker: 'tecnología al servicio del espacio',
-        bg: '#C1602C'
-      }
-    ]
-
     const collageImages = [
       '/Centro vacunatorio/RENDER_01.webp',
       '/Mediateca/imagen 01 axo aerea_4 - Photo.webp',
       '/Mediateca/imagen 01 axo aerea_2 - Photo.webp'
     ]
 
-    const CV_FILENAME = 'CV_Gonzalo_Coraglio.pdf'
-
-    /** URL absoluta del PDF (respeta `base` de Vite en GitHub Pages, etc.). */
-    const cvAbsoluteUrl = () => {
-      if (typeof window === 'undefined') return `/${CV_FILENAME}`
-      const base = import.meta.env.BASE_URL || '/'
-      const dir = new URL(base, `${window.location.origin}/`).href
-      return new URL(CV_FILENAME, dir).href
-    }
-
-    /**
-     * Un solo flujo en todos los navegadores:
-     * 1) fetch del PDF (URL absoluta con base de Vite)
-     * 2) en táctil: Web Share (archivo o enlace) — evita visor PDF en negro en Safari
-     * 3) descarga forzada vía blob
-     * 4) abrir URL en pestaña nueva
-     */
-    const openCvPdf = async () => {
-      const absUrl = cvAbsoluteUrl()
-      const offerShare =
-        typeof window !== 'undefined' &&
-        window.matchMedia?.('(pointer: coarse)')?.matches === true
-
-      let pdfBlob
-      try {
-        const res = await fetch(absUrl, { cache: 'no-store', credentials: 'omit' })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const raw = await res.blob()
-        pdfBlob =
-          raw.type === 'application/pdf'
-            ? raw
-            : new Blob([raw], { type: 'application/pdf' })
-      } catch {
-        window.open(absUrl, '_blank', 'noopener,noreferrer')
-        return
-      }
-
-      const nav = typeof navigator !== 'undefined' ? navigator : null
-
-      if (offerShare) {
-        try {
-          if (typeof File !== 'undefined' && nav?.share && typeof nav.canShare === 'function') {
-            let file
-            try {
-              file = new File([pdfBlob], CV_FILENAME, { type: 'application/pdf' })
-            } catch {
-              file = null
-            }
-            if (file) {
-              try {
-                if (nav.canShare({ files: [file] })) {
-                  await nav.share({ files: [file], title: 'CV — Gonzalo Coraglio' })
-                  return
-                }
-              } catch {
-                /* continuar */
-              }
-            }
-          }
-        } catch (err) {
-          if (err && err.name === 'AbortError') return
-        }
-
-        try {
-          if (nav?.share) {
-            await nav.share({ title: 'CV — Gonzalo Coraglio', url: absUrl })
-            return
-          }
-        } catch (err) {
-          if (err && err.name === 'AbortError') return
-        }
-      }
-
-      try {
-        const objectUrl = URL.createObjectURL(pdfBlob)
-        const a = document.createElement('a')
-        a.href = objectUrl
-        a.download = CV_FILENAME
-        a.rel = 'noopener'
-        a.style.display = 'none'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
-      } catch {
-        window.open(absUrl, '_blank', 'noopener,noreferrer')
-      }
-    }
+    /** PDF en `public/`; respeta `base` de Vite (GitHub Pages, etc.). */
+    const cvUrl = `${import.meta.env.BASE_URL || '/'}CV_Gonzalo_Coraglio.pdf`
 
     return {
-      skills,
       collageImages,
-      openCvPdf
+      cvUrl
     }
   }
 }
@@ -365,6 +238,7 @@ export default {
     0 14px 36px rgba(43, 43, 43, 0.14);
   transition: var(--transition);
   cursor: pointer;
+  text-decoration: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   -webkit-appearance: none;
@@ -391,92 +265,6 @@ export default {
   outline-offset: 4px;
 }
 
-.skills-title {
-  font-family: var(--font-sans);
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: var(--primary-color);
-  margin-bottom: 0;
-}
-
-/* Franja full-bleed: se sale del .container para ocupar todo el ancho de ventana */
-.skills-band {
-  margin-top: 3rem;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  height: 20rem;
-}
-
-.skill-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1.75rem;
-  overflow: hidden;
-  text-decoration: none;
-  isolation: isolate;
-  transition: var(--transition);
-}
-
-.skill-panel:hover {
-  filter: brightness(1.08);
-}
-
-.skill-panel-kicker {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.78);
-  letter-spacing: 0.01em;
-}
-
-.skill-panel-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-}
-
-.skill-panel-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-  color: var(--white);
-}
-
-.skill-panel-cta {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 0.75rem 1.35rem;
-  border-radius: 999px;
-  background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  color: var(--white);
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.skill-panel:hover .skill-panel-cta {
-  background: var(--white);
-  border-color: var(--white);
-  color: var(--color-charcoal);
-  transform: translateY(-2px);
-}
-
 @media (max-width: 1024px) {
   .about-content {
     grid-template-columns: 1fr;
@@ -487,15 +275,6 @@ export default {
     min-height: 26rem;
     max-width: 32rem;
   }
-
-  .skills-band {
-    grid-template-columns: repeat(2, 1fr);
-    height: auto;
-  }
-
-  .skill-panel {
-    height: 22rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -505,10 +284,6 @@ export default {
 
   .section-title {
     font-size: 1.85rem;
-  }
-
-  .skills-title {
-    font-size: 1.65rem;
   }
 
   .about-cv-wrap {
@@ -539,18 +314,6 @@ export default {
 
   .collage-item--c {
     height: 8rem;
-  }
-
-  .skills-band {
-    grid-template-columns: 1fr;
-  }
-
-  .skill-panel {
-    height: 18rem;
-  }
-
-  .skill-panel-title {
-    font-size: 1.4rem;
   }
 }
 </style>

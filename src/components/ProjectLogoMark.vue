@@ -1,6 +1,7 @@
 <template>
   <span class="project-logo-mark" :aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="project-logo-mark__svg">
+    <img v-if="image" :src="imageSrc" alt="" class="project-logo-mark__img" />
+    <svg v-else viewBox="0 0 24 24" class="project-logo-mark__svg">
       <rect x="0" y="0" width="24" height="24" rx="4" class="project-logo-mark__bg" />
       <g class="project-logo-mark__glyph" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
         <template v-if="glyph === 'grid'">
@@ -19,19 +20,31 @@
         <template v-else-if="glyph === 'cross'">
           <path d="M12 5v14M5 12h14" stroke-width="2.4" />
         </template>
+        <template v-else-if="glyph === 'stairs'">
+          <path d="M5 19h4v-4h4v-4h4V7h2" />
+        </template>
       </g>
     </svg>
   </span>
 </template>
 
 <script>
+import { assetUrl } from '../utils/images'
+
 export default {
   name: 'ProjectLogoMark',
   props: {
     glyph: {
       type: String,
-      required: true,
-      validator: (v) => ['grid', 'plan', 'levels', 'cross'].includes(v)
+      default: '',
+      validator: (v) => ['', 'grid', 'plan', 'levels', 'cross', 'stairs'].includes(v)
+    },
+    /** Imagen propia en lugar del glifo SVG */
+    image: { type: String, default: '' }
+  },
+  computed: {
+    imageSrc() {
+      return assetUrl(this.image)
     }
   }
 }
@@ -48,6 +61,13 @@ export default {
 .project-logo-mark__svg {
   width: 100%;
   height: 100%;
+}
+
+.project-logo-mark__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
 }
 
 .project-logo-mark__bg {

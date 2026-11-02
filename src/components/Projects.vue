@@ -27,7 +27,7 @@
             :class="{ 'project-block-head--collapse': isPrimaryExpanded(index) }"
             @click="onHeadClick(index)"
           >
-            <ProjectLogoMark :glyph="project.logoGlyph" class="project-block-head__logo" />
+            <ProjectLogoMark :glyph="project.logoGlyph" :image="project.logoImage" class="project-block-head__logo" />
             <h3 class="strip-title">{{ project.title }}</h3>
             <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
           </header>
@@ -43,7 +43,7 @@
               class="project-collapsed-layout"
             >
               <header class="project-block-head project-block-head--beside">
-                <ProjectLogoMark :glyph="project.logoGlyph" class="project-block-head__logo" />
+                <ProjectLogoMark :glyph="project.logoGlyph" :image="project.logoImage" class="project-block-head__logo" />
                 <h3 class="strip-title">{{ project.title }}</h3>
                 <p class="strip-meta">{{ project.location }} · {{ project.category }}</p>
               </header>
@@ -137,7 +137,14 @@
                         :aria-label="`Cerrar ${project.title}`"
                         @click="toggleExpand(index)"
                       >
+                        <ImageSequencePlayer
+                          v-if="item.slide.images"
+                          :images="item.slide.images"
+                          :alt-base="item.slide.alt || 'Vista'"
+                          :interval-ms="2000"
+                        />
                         <OptimizedPicture
+                          v-else
                           :src="item.slide.src"
                           :alt="item.slide.alt || `Imagen ${item.origIndex + 1}`"
                           img-class="slide-img"
@@ -185,6 +192,14 @@
                           :alt="item.slide.alt || `Imagen ${item.origIndex + 1}`"
                           img-class="slide-img"
                           loading="lazy"
+                          :img-style="
+                            item.slide.matchAspect
+                              ? {
+                                  aspectRatio: item.slide.matchAspect,
+                                  objectPosition: 'center center !important'
+                                }
+                              : undefined
+                          "
                         />
                       </figure>
 
@@ -1060,35 +1075,13 @@ export default {
             paragraphs: [
               'En planta baja y Nivel 1, un ala lindera a la medianera concentra el sector administrativo y más privado. Desde el segundo nivel en adelante, cada planta repite el esquema de dos alas —aulas de un lado, biblioteca y salas de lectura del otro— mirando ambas al atrio central, espejándose o generando dobles alturas en los niveles superiores.'
             ]
-          },
-          {
-            dualImageCarousel: {
-              syncPairs: true,
-              graphicMiniLeftAlignBottom: true,
-              leftLabel: '',
-              rightLabel: '',
-              pairs: [
-                {
-                  left: '/Mediateca/Detalle ( 2 imagenes )/Detalle 0.png',
-                  right:
-                    '/Mediateca/Detalle ( 2 imagenes )/grafico para detalle 0 chiquito.png'
-                },
-                {
-                  left: '/Mediateca/Detalle ( 2 imagenes )/Detalle 01.png',
-                  right:
-                    '/Mediateca/Detalle ( 2 imagenes )/grafico para detalle 01 chiquito.png'
-                }
-              ]
-            },
-            heading: 'Referencias',
-            paragraphs: [DETALLE_REFERENCIAS],
-            sideTextRight: true
           }
         ]
       },
       {
         slug: 'centro-vacunatorio',
         logoGlyph: 'cross',
+        logoImage: '/Centro vacunatorio/logo.png',
         title: 'Centro vacunatorio',
         category: 'Proyecto',
         location: '—',
@@ -1108,6 +1101,11 @@ export default {
             paragraphs: [
               'Centro de vacunación desmontable, pensado como un sistema modular que se puede montar en cualquier contexto. Los muros no son fijos, se ubican según la necesidad de cada emplazamiento respetando la modulación estructural. Sin muros ciegos y con la cubierta tensada despegada de los cerramientos, el sistema favorece la ventilación cruzada para evitar la propagación de bacterias dentro del centro.'
             ]
+          },
+          {
+            image: '/Centro vacunatorio/Planta.png',
+            heading: 'Planta',
+            skipText: true
           },
           {
             image: '/Centro vacunatorio/secuencia constructiva grafico_.png',
@@ -1130,10 +1128,94 @@ export default {
             ]
           },
           {
+            image: '/Centro vacunatorio/Corte.png',
+            heading: 'Corte',
+            /** Caja con la proporción de Planta.png: así el corte queda del mismo ancho */
+            matchAspect: '1863 / 1280',
+            skipText: true
+          },
+          {
             image: '/Centro vacunatorio/detalle.png',
             heading: 'Referencias',
             paragraphs: [CENTRO_VACUNATORIO_DETALLE_REFERENCIAS],
             sideTextRight: true
+          }
+        ]
+      },
+      {
+        slug: 'biblioteca',
+        logoGlyph: 'stairs',
+        title: 'Biblioteca municipal',
+        category: 'Proyecto',
+        location: '—',
+        year: '2024',
+        area: '—',
+        uniformImages: false,
+        pdfs: null,
+        heroImage: '/Biblioteca/Vista exterior.webp',
+        carouselPanels: [
+          {
+            image: '/Biblioteca/Vista exterior.webp',
+            skipText: true
+          },
+          {
+            image: '/Biblioteca/Vista interior.webp',
+            skipText: true
+          },
+          {
+            image: '/Biblioteca/Cortes.webp',
+            skipText: true
+          },
+          {
+            dualImageCarousel: {
+              syncPairs: true,
+              graphicMiniLeftAlignBottom: true,
+              leftLabel: '',
+              rightLabel: '',
+              pairs: [
+                {
+                  left: '/Biblioteca/Detalle ( 2 imagenes )/Detalle 0.png',
+                  right:
+                    '/Biblioteca/Detalle ( 2 imagenes )/grafico para detalle 0 chiquito.png'
+                },
+                {
+                  left: '/Biblioteca/Detalle ( 2 imagenes )/Detalle 01.png',
+                  right:
+                    '/Biblioteca/Detalle ( 2 imagenes )/grafico para detalle 01 chiquito.png'
+                }
+              ]
+            },
+            heading: 'Referencias',
+            paragraphs: [DETALLE_REFERENCIAS],
+            sideTextRight: true
+          }
+        ]
+      },
+      {
+        slug: 'viviendas',
+        logoGlyph: 'grid',
+        logoImage: '/Viviendas/logo.png',
+        title: 'Viviendas',
+        category: 'Proyecto',
+        location: '—',
+        year: '2024',
+        area: '—',
+        uniformImages: false,
+        pdfs: null,
+        heroImage: '/Viviendas/Corte A-A.png',
+        /** Al abrir, la imagen principal pasa a alternar con los demás cortes */
+        heroSequence: ['/Viviendas/Corte A-A.png', '/Viviendas/Corte B-B.webp'],
+        carouselPanels: [
+          {
+            imageCarousel: [
+              '/Viviendas/Planta 0.00.webp',
+              '/Viviendas/Planta 1.80.png',
+              '/Viviendas/Planta 5.40.png',
+              '/Viviendas/Planta 9.00.png',
+              '/Viviendas/Planta 12.60.png',
+              '/Viviendas/Planta 16.20.png'
+            ],
+            skipText: true
           }
         ]
       }
@@ -1204,6 +1286,7 @@ export default {
             src: panel.image,
             alt: panel.heading || 'Vista',
             imageSmall: panel.imageSmall === true,
+            matchAspect: panel.matchAspect || null,
             ...(panel.sideTextRight &&
             (panel.heading || (panel.paragraphs && panel.paragraphs.length))
               ? {
@@ -1252,7 +1335,8 @@ export default {
         type: 'image',
         src: p.heroImage,
         alt: p.title,
-        isHero: true
+        isHero: true,
+        ...(p.heroSequence?.length ? { images: p.heroSequence } : {})
       }
       const skipFirst =
         base.length > 0 &&

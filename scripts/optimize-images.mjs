@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const publicDir = path.join(__dirname, '..', 'public')
 
-const REL_DIRS = ['IMG random', 'Master plan', 'Mediateca', 'Centro vacunatorio']
+const REL_DIRS = ['IMG random', 'Master plan', 'Mediateca', 'Centro vacunatorio', 'Biblioteca', 'Viviendas']
 
 const exts = new Set(['.jpg', '.jpeg', '.png'])
 

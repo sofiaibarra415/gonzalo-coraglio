@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="rootEl"
     class="paired-dual-columns-player"
     :class="{ 'paired-dual-columns-player--sidebar': graphicMiniLeftAlignBottom }"
     role="img"
@@ -27,12 +28,13 @@
                 class="paired-dual-columns-player__frame"
                 :class="{ 'is-active': i === currentIndex }"
                 :aria-hidden="i !== currentIndex"
+                :data-frame="i"
               >
                 <OptimizedPicture
                   :src="pair.right"
                   :alt="`${altRight} — ${i + 1}`"
                   img-class="slide-img slide-img--graphic-thumb"
-                  loading="lazy"
+                  :loading="loadAll ? 'eager' : 'lazy'"
                 />
               </div>
             </div>
@@ -49,12 +51,13 @@
               class="paired-dual-columns-player__frame"
               :class="{ 'is-active': i === currentIndex }"
               :aria-hidden="i !== currentIndex"
+              :data-frame="i"
             >
               <OptimizedPicture
                 :src="pair.left"
                 :alt="`${altLeft} — ${i + 1}`"
                 img-class="slide-img"
-                loading="lazy"
+                :loading="loadAll ? 'eager' : 'lazy'"
               />
             </div>
           </div>
@@ -73,12 +76,13 @@
               class="paired-dual-columns-player__frame"
               :class="{ 'is-active': i === currentIndex }"
               :aria-hidden="i !== currentIndex"
+              :data-frame="i"
             >
               <OptimizedPicture
                 :src="pair.left"
                 :alt="`${altLeft} — ${i + 1}`"
                 img-class="slide-img"
-                loading="lazy"
+                :loading="loadAll ? 'eager' : 'lazy'"
               />
             </div>
           </div>
@@ -94,12 +98,13 @@
               class="paired-dual-columns-player__frame"
               :class="{ 'is-active': i === currentIndex }"
               :aria-hidden="i !== currentIndex"
+              :data-frame="i"
             >
               <OptimizedPicture
                 :src="pair.right"
                 :alt="`${altRight} — ${i + 1}`"
                 img-class="slide-img"
-                loading="lazy"
+                :loading="loadAll ? 'eager' : 'lazy'"
               />
             </div>
           </div>
@@ -113,8 +118,9 @@
 </template>
 
 <script>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import OptimizedPicture from './OptimizedPicture.vue'
+import { useInView } from '../utils/useInView'
 
 export default {
   name: 'PairedDualColumnsPlayer',
@@ -126,13 +132,16 @@ export default {
     altLeft: { type: String, default: 'Detalle constructivo' },
     altRight: { type: String, default: 'Gráfico' },
     intervalMs: { type: Number, default: 2000 },
-    pauseOnHover: { type: Boolean, default: true },
+    pauseOnHover: { type: Boolean, default: false },
     /** Gráfico mini a la izquierda, alineado abajo con la imagen principal (detalle a la derecha). Sin texto. */
     graphicMiniLeftAlignBottom: { type: Boolean, default: false }
   },
   setup(props) {
     const currentIndex = ref(0)
     const hoverPaused = ref(false)
+    const rootEl = ref(null)
+    /** Al aparecer en pantalla se cargan todas las fotos (no solo la visible) */
+    const loadAll = ref(false)
     let timer = null
 
     const reducedMotion = () =>
@@ -154,12 +163,21 @@ export default {
     const shouldRun = () =>
       props.pairs.length > 1 &&
       !reducedMotion() &&
-      !(props.pauseOnHover && hoverPaused.value)
+      !(props.pauseOnHover && hoverPaused.value) &&
+      inView.value
+
+    /** La foto siguiente ya terminó de cargar (si no, se espera al próximo tick en vez de mostrar un hueco) */
+    const frameReady = (i) => {
+      const imgs = rootEl.value?.querySelectorAll(`[data-frame="${i}"] img`) || []
+      return [...imgs].every((img) => img.complete && img.naturalWidth > 0)
+    }
 
     const tick = () => {
       const n = props.pairs.length
       if (n <= 1 || !shouldRun()) return
-      currentIndex.value = (currentIndex.value + 1) % n
+      const next = (currentIndex.value + 1) % n
+      if (!frameReady(next)) return
+      currentIndex.value = next
     }
 
     const start = () => {
@@ -167,6 +185,16 @@ export default {
       if (!shouldRun()) return
       timer = window.setInterval(tick, props.intervalMs)
     }
+
+    /** Cada vez que el bloque aparece en pantalla arranca de nuevo en la foto 1 */
+    const { inView } = useInView(rootEl, {
+      onEnter: () => {
+        loadAll.value = true
+        currentIndex.value = 0
+        start()
+      },
+      onLeave: clearTimer
+    })
 
     const onHoverEnter = () => {
       if (!props.pauseOnHover) return
@@ -196,15 +224,13 @@ export default {
       }
     )
 
-    onMounted(() => {
-      start()
-    })
-
     onUnmounted(() => {
       clearTimer()
     })
 
     return {
+      rootEl,
+      loadAll,
       currentIndex,
       ariaLabel,
       onHoverEnter,
